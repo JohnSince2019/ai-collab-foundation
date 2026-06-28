@@ -100,6 +100,9 @@ export async function exportAiOsAction(formData: FormData) {
       savedVersion: savedCandidateResult.versionSummary.version,
       savedAt: savedCandidateResult.versionSummary.savedAt,
       changeSummary: savedCandidateResult.versionSummary.changeSummary.join(" | "),
+      syncClients: savedCandidateResult.clientSyncPrompts.map((item) => item.client).join(" | "),
+      syncPaths: savedCandidateResult.clientSyncPrompts.map((item) => item.targetPath).join(" | "),
+      syncReasons: savedCandidateResult.clientSyncPrompts.map((item) => item.reason).join(" | "),
     })}`,
   );
 }

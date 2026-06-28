@@ -73,6 +73,26 @@ function buildPlacementCards() {
   ];
 }
 
+function buildClientSyncCards() {
+  return [
+    {
+      client: "Codex",
+      target: "AGENTS.md",
+      summary: "当共享规则、工作流或版本记录更新后，同步仓库级代理说明。",
+    },
+    {
+      client: "Cursor",
+      target: ".cursor/rules/ai-collab-foundation.mdc",
+      summary: "把稳定规则镜像到 Cursor 项目规则，保持 IDE 内建议与共享底座一致。",
+    },
+    {
+      client: "Claude Code",
+      target: "AI-OS/candidates/claude-code/session-start.md",
+      summary: "更新长会话开场提示，确保 Claude Code 也能读到新的规则和版本变化。",
+    },
+  ];
+}
+
 export default async function SetupCheckPage({
   searchParams,
 }: {
@@ -103,6 +123,7 @@ export default async function SetupCheckPage({
   const hasExport = getFirst(params.exported) === "1";
   const stages = buildSetupStages(hasExport);
   const placementCards = buildPlacementCards();
+  const clientSyncCards = buildClientSyncCards();
 
   return (
     <Shell className="pb-12">
@@ -338,6 +359,28 @@ export default async function SetupCheckPage({
             <pre className="mt-5 whitespace-pre-wrap text-sm leading-7 text-slate-600">{verification?.content}</pre>
           </Card>
         </div>
+
+        <Card className="px-6 py-6 md:px-8">
+          <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+            <ClipboardCheck className="h-4 w-4 text-emerald-600" />
+            客户端同步提示
+          </div>
+          <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
+            新沉淀下来的规则只有真正回流到客户端适配层里，才会从“本次可用”变成“下次默认生效”。
+          </div>
+          <div className="mt-4 grid gap-3 xl:grid-cols-3">
+            {clientSyncCards.map((item) => (
+              <div key={item.client} className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
+                <div className="text-sm font-semibold text-slate-900">{item.client}</div>
+                <div className="mt-1 text-sm leading-6 text-slate-600">同步目标：{item.target}</div>
+                <div className="mt-1 text-sm leading-6 text-slate-500">{item.summary}</div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-4 text-sm leading-6 text-slate-500">
+            收尾验收标准：复盘入口已存在，规则候选可生成，确认保存可写回，轻量版本可追踪，且同步目标已明确到客户端文件。
+          </div>
+        </Card>
 
         <Card className="px-6 py-5 md:px-8">
           <div className="flex flex-wrap items-center justify-between gap-4">

@@ -44,6 +44,11 @@ export type SaveRuleResult = {
     category: RuleCandidate["category"];
     targetPath: string;
   }>;
+  clientSyncPrompts: Array<{
+    client: string;
+    targetPath: string;
+    reason: string;
+  }>;
 };
 
 function sentence(input: string, fallback: string) {
@@ -188,6 +193,24 @@ export function applySelectedRuleCandidates(
           : "AI-OS/memory/decisions.md",
   }));
 
+  const clientSyncPrompts = [
+    {
+      client: "Codex",
+      targetPath: "AGENTS.md",
+      reason: "共享规则和流程更新后，需要把新的执行边界同步到仓库级代理说明。",
+    },
+    {
+      client: "Cursor",
+      targetPath: ".cursor/rules/ai-collab-foundation.mdc",
+      reason: "当稳定规则和工作流变化后，需要把关键约束镜像到 Cursor 项目规则。",
+    },
+    {
+      client: "Claude Code",
+      targetPath: "AI-OS/candidates/claude-code/session-start.md",
+      reason: "长会话开场提示需要同步新的规则、版本和任务后复盘要求。",
+    },
+  ].filter((item) => savedTargets.length > 0);
+
   const version = `v${savedTargets.length === 0 ? "0.0" : "0.1"}.${savedTargets.length}`;
   const savedAt = new Date().toISOString();
   const changeSummary = savedTargets.length > 0
@@ -209,5 +232,6 @@ export function applySelectedRuleCandidates(
       changeSummary,
     },
     savedTargets,
+    clientSyncPrompts,
   };
 }

@@ -80,6 +80,18 @@ export default async function AiOsPage({
     .split(" | ")
     .map((item) => item.trim())
     .filter(Boolean);
+  const syncClients = getFirst(params.syncClients)
+    .split(" | ")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  const syncPaths = getFirst(params.syncPaths)
+    .split(" | ")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  const syncReasons = getFirst(params.syncReasons)
+    .split(" | ")
+    .map((item) => item.trim())
+    .filter(Boolean);
 
   return (
     <Shell className="pb-12">
@@ -117,6 +129,23 @@ export default async function AiOsPage({
                   {changeSummary.map((item) => (
                     <div key={item} className="text-sm leading-6 text-slate-500">
                       {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+            {syncClients.length > 0 ? (
+              <div className="mt-3 rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-4">
+                <div className="text-sm font-semibold text-slate-900">客户端同步提示</div>
+                <div className="mt-2 space-y-3">
+                  {syncClients.map((client, index) => (
+                    <div key={`${client}-${syncPaths[index]}`} className="text-sm leading-6 text-slate-500">
+                      <span className="font-medium text-slate-900">{client}</span>
+                      {" "}
+                      {"-> "}
+                      {syncPaths[index]}
+                      {" "}
+                      <span className="text-slate-500">{syncReasons[index]}</span>
                     </div>
                   ))}
                 </div>
