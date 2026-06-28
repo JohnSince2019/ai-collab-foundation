@@ -1,4 +1,10 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+
+async function expectMcpSummary(page: Page) {
+  await expect(
+    page.getByText(/MCP 选择：(Linear MCP、Knowledge Index MCP|Knowledge Index MCP、Linear MCP)/),
+  ).toBeVisible();
+}
 
 test("home and key flows render", async ({ page }) => {
   await page.goto("/");
@@ -18,15 +24,48 @@ test("home and key flows render", async ({ page }) => {
 
   await expect(page.getByText("先给出一套默认推荐，再解释为什么。")).toBeVisible();
   await expect(page.getByText("建立统一 AI 协作底座")).toBeVisible();
-  await page.getByRole("link", { name: "继续生成 AI-OS" }).click();
+  await expect(page.getByText("当前未接入任何 MCP，也可以继续使用 AI-OS、客户端适配文件和本地规则沉淀。")).toBeVisible();
+  await expect(page.getByText("推荐起点")).toBeVisible();
+  await expect(page.getByText("只建议")).toBeVisible();
+  await expect(page.getByText("允许运行本地命令，但高风险动作仍需人工确认。")).toBeVisible();
+  await expect(page.getByText("本地动作")).toBeVisible();
+  await expect(page.getByText("真实世界动作")).toBeVisible();
+  await expect(page.getByText("外部系统动作")).toBeVisible();
+  const knowledgeIndexCheckbox = page.getByRole("checkbox", { name: "Knowledge Index MCP" });
+  const linearCheckbox = page.getByRole("checkbox", { name: "Linear MCP" });
+  await knowledgeIndexCheckbox.check();
+  await linearCheckbox.check();
+  await expect(knowledgeIndexCheckbox).toBeChecked();
+  await expect(linearCheckbox).toBeChecked();
+  await page.getByRole("button", { name: "继续生成 AI-OS" }).click();
   await expect(page.getByText("这是你的第一版 AI-OS，可直接作为后续项目的起点。")).toBeVisible();
+  await expectMcpSummary(page);
   await expect(page.getByText("AI-OS/identity.md").first()).toBeVisible();
   await expect(page.getByText("AI-OS/clients/claude-code.md").first()).toBeVisible();
   await expect(page.getByText("AI-OS/clients/cursor.md").first()).toBeVisible();
   await expect(page.getByText("AI-OS/clients/copilot.md").first()).toBeVisible();
+  await expect(page.getByText("AI-OS/mcp/selection.md").first()).toBeVisible();
+  await expect(page.getByText("AI-OS/permissions/boundaries.md").first()).toBeVisible();
   await expect(page.getByText("AI-OS/install/adapter-setup.md").first()).toBeVisible();
+  await expect(page.getByText("AI-OS/install/environment-check.md").first()).toBeVisible();
+  await expect(page.getByText("AI-OS/install/existing-rules-scan.md").first()).toBeVisible();
+  await expect(page.getByText("AI-OS/install/diff-merge-plan.md").first()).toBeVisible();
+  await expect(page.getByText("AI-OS/install/sensitive-risk-guard.md").first()).toBeVisible();
+  await expect(page.getByText("AI-OS/install/mcp-health.md").first()).toBeVisible();
   await expect(page.getByText("AI-OS/install/target-locations.md").first()).toBeVisible();
   await expect(page.getByText("AI-OS/install/verification-checklist.md").first()).toBeVisible();
+  await expect(page.getByText("本地环境检测")).toBeVisible();
+  await expect(page.getByText("已有规则识别与冲突扫描")).toBeVisible();
+  await expect(page.getByText("配置 diff 预览与合并建议")).toBeVisible();
+  await expect(page.getByText("敏感信息检查与风险提示")).toBeVisible();
+  await expect(page.getByText("MCP 连接状态检测与失败兜底")).toBeVisible();
+  await expect(page.getByText("任务后复盘")).toBeVisible();
+  await expect(page.getByRole("link", { name: "进入复盘" })).toBeVisible();
+  await expect(page.getByText("这次任务是什么")).toBeVisible();
+  await expect(page.getByText("这次什么做得好")).toBeVisible();
+  await expect(page.getByText("这次哪里卡住了")).toBeVisible();
+  await expect(page.getByText("哪些经验值得沉淀成规则")).toBeVisible();
+  await expect(page.getByText("保存策略")).toBeVisible();
   await expect(page.getByText("AI-OS/templates/AGENTS.md.template").first()).toBeVisible();
   await expect(page.getByText("AI-OS/templates/cursor-project-rules.template.md").first()).toBeVisible();
   await expect(page.getByText("AI-OS/templates/claude-code-session-template.md").first()).toBeVisible();
@@ -39,6 +78,8 @@ test("home and key flows render", async ({ page }) => {
   await expect(page.getByText("# Identity").first()).toBeVisible();
   await expect(page.getByText("# Claude Code Client Profile")).toBeVisible();
   await expect(page.getByText("# Adapter Setup Guide")).toBeVisible();
+  await expect(page.getByText("# MCP Selection").last()).toBeVisible();
+  await expect(page.getByText("# Permission Boundaries")).toBeVisible();
   await expect(page.getByText("# Target Locations")).toBeVisible();
   await expect(page.getByText("# Verification Checklist")).toBeVisible();
   await expect(page.getByText("# AGENTS.md Template")).toBeVisible();
@@ -46,14 +87,27 @@ test("home and key flows render", async ({ page }) => {
   await expect(page.getByText("# Claude Code Session Template")).toBeVisible();
   await expect(page.getByText("# AGENTS.md").nth(1)).toBeVisible();
   await expect(page.getByText("# Cursor Rules")).toBeVisible();
-  await expect(page.getByText("# AI Collab Foundation Cursor Rule")).toBeVisible();
-  await expect(page.getByText("# Claude Code Session Start")).toBeVisible();
+  await expect(page.getByText("# AI Collab Foundation Cursor Rule").last()).toBeVisible();
+  await expect(page.getByText("# Claude Code Session Start").last()).toBeVisible();
   await expect(page.getByText("# Rules")).toBeVisible();
   await page.getByRole("button", { name: "写出 AI-OS 文件" }).click();
   await expect(page.getByText("AI-OS 已写出到本地目录")).toBeVisible();
   await expect(page.getByText(/generated-ai-os/)).toBeVisible();
-  await page.goto(`/setup-check?role=${encodeURIComponent("独立开发者")}&goal=${encodeURIComponent("建立统一 AI 协作底座")}&clients=${encodeURIComponent("Codex、Cursor、ChatGPT")}&tasks=${encodeURIComponent("写 PRD、拆需求、改代码、复盘")}&concerns=${encodeURIComponent("乱改文件、上下文不一致、做完没验证")}`);
+  await page.goto(`/setup-check?role=${encodeURIComponent("独立开发者")}&goal=${encodeURIComponent("建立统一 AI 协作底座")}&clients=${encodeURIComponent("Codex、Cursor、ChatGPT")}&tokenStatus=${encodeURIComponent("need-token")}&tasks=${encodeURIComponent("写 PRD、拆需求、改代码、复盘")}&concerns=${encodeURIComponent("乱改文件、上下文不一致、做完没验证")}&mcpSelection=${encodeURIComponent("Linear")}&mcpSelection=${encodeURIComponent("Knowledge Index")}`);
   await expect(page.getByText("接入之后，应该如何确认这套底座真的生效了。")).toBeVisible();
+  await expectMcpSummary(page);
+  await expect(page.getByText("当前接入阶段")).toBeVisible();
+  await expect(page.getByText("本地环境健康检查")).toBeVisible();
+  await expect(page.getByText("已有规则识别与冲突扫描")).toBeVisible();
+  await expect(page.getByText("配置 diff 预览与合并建议")).toBeVisible();
+  await expect(page.getByText("敏感信息检查与风险提示")).toBeVisible();
+  await expect(page.getByText("MCP 连接状态检测与失败兜底")).toBeVisible();
+  await expect(page.getByText("已导出但未放置")).toBeVisible();
+  await expect(page.getByText("已放置待验证")).toBeVisible();
+  await expect(page.getByText("已接入可使用")).toBeVisible();
+  await expect(page.getByText("Codex 放置与验证")).toBeVisible();
+  await expect(page.getByText("Claude Code 放置与验证")).toBeVisible();
+  await expect(page.getByText("Cursor 放置与验证")).toBeVisible();
   await expect(page.getByText("# Target Locations")).toBeVisible();
   await expect(page.getByText("# Verification Checklist")).toBeVisible();
 });

@@ -39,15 +39,10 @@
 
 下一步优先级：
 
-1. 建立 Linear 项目与 milestones / issues
-2. 将首版 UI 与真实输入表单、结果页、AI-OS 文件生成继续增强
-3. 启动 `M1` 深化实现：
-   - AI 工作流诊断结果页增强
-   - 推荐客户端组合逻辑增强
-   - GPT Token 入口
-   - MCP 推荐与选择
-   - 权限配置
-   - AI-OS 生成
+1. 按 PRD 对应的 milestones `M0-M6` 持续管理项目
+2. 严格按 Linear issue 串行执行当前 `M1`
+3. 当前等待 `JOH-133` 的人工验收结论；在 John 明确 `passed` 前，不进入 `JOH-134`
+4. `JOH-140` 专门负责 UI/UX 高保真落地与截图验收
 
 ## 权威规则
 

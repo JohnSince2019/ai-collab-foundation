@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, ShieldCheck } from "lucide-react";
 import {
   Card,
+  ChoiceCards,
   InputField,
   Pill,
   PrimaryButton,
@@ -30,13 +31,14 @@ export default async function OnboardingPage({
   const clients = getFirst(params.clients);
   const tasks = getFirst(params.tasks);
   const concerns = getFirst(params.concerns);
+  const tokenStatus = getFirst(params.tokenStatus) || "need-token";
 
   return (
     <Shell>
       <TopNav />
       <main className="mx-auto mt-8 max-w-7xl">
-        <div className="grid gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-start">
-          <div className="space-y-6 lg:sticky lg:top-8">
+        <div className="grid gap-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-start">
+          <div className="space-y-6 pt-3 lg:sticky lg:top-8">
             <SectionTag>Onboarding</SectionTag>
             <ProgressHeader
               eyebrow="Minimal Intake"
@@ -53,10 +55,10 @@ export default async function OnboardingPage({
           </div>
 
           <Card className="px-5 py-5 md:px-8 md:py-8">
-            <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-5">
+            <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-5">
               <div>
-                <div className="text-sm font-semibold text-slate-900">开始生成你的 AI 协作底座</div>
-                <div className="mt-1 text-sm text-slate-500">回答这几项后，系统会生成第一版协作配置。</div>
+                <div className="text-[15px] font-semibold text-slate-900">开始生成你的 AI 协作底座</div>
+                <div className="mt-1 text-sm leading-6 text-slate-500">回答这几项后，系统会生成第一版协作配置。</div>
               </div>
               <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">
                 <ShieldCheck className="h-4 w-4" />
@@ -89,6 +91,17 @@ export default async function OnboardingPage({
                   label="你常用哪些 AI 客户端"
                   placeholder="例如：Codex、ChatGPT、Cursor、Claude Code"
                   helper="系统会据此给出主力组合与替补矩阵。"
+                />
+                <ChoiceCards
+                  name="tokenStatus"
+                  value={tokenStatus}
+                  label="你的 GPT Token 状态"
+                  helper="这只影响接入建议和商业化承接，不会阻塞你继续生成 AI-OS。"
+                  options={[
+                    { value: "has-token", title: "已有 Token", body: "已经有稳定可用的 GPT Token 接入方案。" },
+                    { value: "need-token", title: "需要接入", body: "认可 GPT 方案，但还没有稳定的 Token 通道。" },
+                    { value: "skip-token", title: "暂不接入", body: "先走基础协作流程，后续再决定是否接入。" },
+                  ]}
                 />
                 <TextareaField
                   name="tasks"

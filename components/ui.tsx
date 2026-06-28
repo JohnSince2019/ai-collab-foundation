@@ -26,7 +26,7 @@ export function TopNav() {
 
 export function SectionTag({ children }: { children: ReactNode }) {
   return (
-    <div className="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-[11px] font-semibold tracking-[0.16em] text-indigo-700 uppercase">
+    <div className="inline-flex items-center rounded-full border border-[#d9ddff] bg-[#f6f7ff] px-3 py-1 text-[11px] font-semibold tracking-[0.16em] text-[#5e63d9] uppercase">
       {children}
     </div>
   );
@@ -34,7 +34,7 @@ export function SectionTag({ children }: { children: ReactNode }) {
 
 export function Card({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={clsx("surface-shadow rounded-[28px] border border-white/70 bg-white/92", className)}>
+    <div className={clsx("surface-shadow rounded-[30px] border border-white/80 bg-white/94", className)}>
       {children}
     </div>
   );
@@ -113,6 +113,50 @@ export function TextareaField({
   );
 }
 
+export function ChoiceCards({
+  label,
+  helper,
+  name,
+  value,
+  options,
+}: {
+  label: string;
+  helper?: string;
+  name: string;
+  value?: string;
+  options: Array<{
+    value: string;
+    title: string;
+    body: string;
+  }>;
+}) {
+  return (
+    <fieldset className="block">
+      <legend className="mb-2 text-sm font-medium text-slate-700">{label}</legend>
+      <div className="grid gap-3 md:grid-cols-3">
+        {options.map((option) => {
+          const checked = (value || options[0]?.value) === option.value;
+
+          return (
+            <label
+              key={option.value}
+              className={clsx(
+                "block cursor-pointer rounded-2xl border px-4 py-4 transition",
+                checked ? "border-slate-950 bg-slate-950 text-white" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50",
+              )}
+            >
+              <input type="radio" name={name} value={option.value} defaultChecked={checked} className="sr-only" />
+              <div className="text-sm font-semibold">{option.title}</div>
+              <div className={clsx("mt-1 text-sm leading-6", checked ? "text-slate-200" : "text-slate-500")}>{option.body}</div>
+            </label>
+          );
+        })}
+      </div>
+      {helper ? <div className="mt-2 text-xs leading-5 text-slate-500">{helper}</div> : null}
+    </fieldset>
+  );
+}
+
 export function PrimaryButton({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <button
@@ -136,8 +180,8 @@ export function SecondaryButton({ children }: { children: ReactNode }) {
 
 export function StatLine({ title, body }: { title: string; body: string }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-      <div className="text-sm font-semibold text-slate-900">{title}</div>
+    <div className="rounded-[24px] border border-slate-200/90 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(15,23,42,0.04)]">
+      <div className="text-[15px] font-semibold text-slate-900">{title}</div>
       <div className="mt-1 text-sm leading-6 text-slate-600">{body}</div>
     </div>
   );
@@ -164,8 +208,8 @@ export function ProgressHeader({
   return (
     <div className="max-w-2xl">
       <div className="text-[12px] font-semibold uppercase tracking-[0.18em] text-slate-500">{eyebrow}</div>
-      <h1 className="mt-4 text-[40px] leading-[1.05] font-semibold text-slate-950 md:text-[56px]">{title}</h1>
-      <p className="mt-5 text-[15px] leading-7 text-slate-600 md:text-[17px]">{body}</p>
+      <h1 className="mt-4 text-[38px] leading-[1.04] font-semibold text-slate-950 md:text-[52px]">{title}</h1>
+      <p className="mt-5 text-[15px] leading-7 text-slate-600">{body}</p>
     </div>
   );
 }

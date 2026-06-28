@@ -9,6 +9,13 @@ function getFirst(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] ?? "" : value ?? "";
 }
 
+function getMany(value: string | string[] | undefined) {
+  if (Array.isArray(value)) {
+    return value.filter(Boolean);
+  }
+  return value ? [value] : [];
+}
+
 export default async function DiagnosisPage({
   searchParams,
 }: {
@@ -20,15 +27,23 @@ export default async function DiagnosisPage({
     role: getFirst(params.role),
     goal: getFirst(params.goal),
     clients: getFirst(params.clients),
+    tokenStatus: getFirst(params.tokenStatus),
+    mcpSelections: getMany(params.mcpSelection).filter((item) => item.trim().length > 0),
     tasks: getFirst(params.tasks),
     concerns: getFirst(params.concerns),
   };
 
   const diagnosis = buildDiagnosis(intake);
-  const configureHref = `/configure?role=${encodeURIComponent(intake.role)}&goal=${encodeURIComponent(intake.goal)}`;
-  const aiOsHref = `/ai-os?role=${encodeURIComponent(intake.role)}&goal=${encodeURIComponent(intake.goal)}&clients=${encodeURIComponent(
-    intake.clients,
-  )}&tasks=${encodeURIComponent(intake.tasks)}&concerns=${encodeURIComponent(intake.concerns)}`;
+  const query = new URLSearchParams();
+  query.set("role", intake.role);
+  query.set("goal", intake.goal);
+  query.set("clients", intake.clients);
+  query.set("tokenStatus", intake.tokenStatus);
+  intake.mcpSelections.forEach((item) => query.append("mcpSelection", item));
+  query.set("tasks", intake.tasks);
+  query.set("concerns", intake.concerns);
+  const configureHref = `/configure?${query.toString()}`;
+  const aiOsHref = `/ai-os?${query.toString()}`;
 
   return (
     <Shell className="pb-12">
@@ -47,6 +62,7 @@ export default async function DiagnosisPage({
                 <Pill active>{diagnosis.roleLabel}</Pill>
                 <Pill>{diagnosis.maturityLabel}</Pill>
                 <Pill>Score {diagnosis.maturityScore}</Pill>
+                <Pill>{diagnosis.modelRecommendation}</Pill>
               </div>
             </div>
 
@@ -56,6 +72,7 @@ export default async function DiagnosisPage({
                 <div><span className="font-medium text-slate-900">角色：</span>{intake.role || "未填写"}</div>
                 <div><span className="font-medium text-slate-900">目标：</span>{intake.goal || "未填写"}</div>
                 <div><span className="font-medium text-slate-900">客户端：</span>{intake.clients || "未填写"}</div>
+                <div><span className="font-medium text-slate-900">Token 状态：</span>{diagnosis.tokenPlan.label}</div>
                 <div><span className="font-medium text-slate-900">高频任务：</span>{intake.tasks || "未填写"}</div>
               </div>
             </div>
@@ -81,6 +98,14 @@ export default async function DiagnosisPage({
                 <div className="text-sm font-semibold text-slate-900">权限起点</div>
                 <div className="mt-1 text-sm leading-6 text-slate-600">{diagnosis.permissionMode}</div>
               </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                <div className="text-sm font-semibold text-slate-900">默认交付方式</div>
+                <div className="mt-1 text-sm leading-6 text-slate-600">{diagnosis.deliveryStyle}</div>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                <div className="text-sm font-semibold text-slate-900">GPT Token 入口</div>
+                <div className="mt-1 text-sm leading-6 text-slate-600">{diagnosis.tokenPlan.guidance}</div>
+              </div>
             </div>
           </Card>
 
@@ -90,10 +115,13 @@ export default async function DiagnosisPage({
               第一版 AI-OS 关注点
             </div>
             <div className="mt-5 space-y-3">
-              {diagnosis.aiOsFocus.map((item) => (
-                <div key={item} className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-4">
+              {diagnosis.recommendedClients.slice(0, 2).map((item) => (
+                <div key={item.name} className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-4">
                   <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-600" />
-                  <div className="text-sm leading-6 text-slate-600">{item}</div>
+                  <div>
+                    <div className="text-sm font-semibold text-slate-900">{item.name}</div>
+                    <div className="mt-1 text-sm leading-6 text-slate-600">{item.rationale}</div>
+                  </div>
                 </div>
               ))}
             </div>

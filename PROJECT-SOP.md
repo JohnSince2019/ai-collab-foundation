@@ -98,6 +98,20 @@ Every issue must be completed in this order:
 8. move to `Done`
 9. continue to the next issue
 
+### 4.4 Serial execution rule
+
+Execution must follow the active Linear issue list in order.
+
+Rules:
+
+1. start from the first not-yet-finished issue
+2. complete the current issue fully before moving to the next one
+3. set the issue to `In Progress` when implementation begins
+4. run the planned tests after implementation
+5. if UI or subjective validation is required, stop and wait for John's confirmation before moving the issue to `Done`
+6. only after the current issue is confirmed `Done` may execution continue to the next issue
+7. when all issues in the active batch are `Done`, stop and report completion to John instead of continuing automatically into new scope
+
 ## 5. The Product Flow Of AI Collab Foundation
 
 `ai-collab-foundation` itself is an upstream system.

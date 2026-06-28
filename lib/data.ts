@@ -21,12 +21,18 @@ export type ClientOption = {
   description: string;
   fit: string;
   recommended?: boolean;
+  model?: string;
+  permissionMode?: string;
+  deliveryStyle?: string;
+  rationale?: string;
 };
 
 export type McpOption = {
   name: string;
   description: string;
   state: "recommended" | "optional" | "later";
+  rationale?: string;
+  selected?: boolean;
 };
 
 export type OutcomeCard = {

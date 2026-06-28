@@ -4,6 +4,8 @@ export type IntakeInput = {
   role: string;
   goal: string;
   clients: string;
+  tokenStatus: string;
+  mcpSelections: string[];
   tasks: string;
   concerns: string;
 };
@@ -16,6 +18,39 @@ export type DiagnosisProfile = {
   summary: string;
   defaultStackReason: string;
   permissionMode: string;
+  modelRecommendation: string;
+  deliveryStyle: string;
+  tokenPlan: {
+    status: "has-token" | "need-token" | "skip-token";
+    label: string;
+    guidance: string;
+    valueSummary: string;
+    riskBoundary: string;
+  };
+  mcpPlan: {
+    selected: string[];
+    fallbackMessage: string;
+    selectionSummary: string;
+  };
+  permissionPlan: {
+    startMode: {
+      name: string;
+      label: string;
+      summary: string;
+      fit: string;
+    };
+    modes: Array<{
+      name: string;
+      label: string;
+      summary: string;
+      fit: string;
+    }>;
+    actionBoundaries: Array<{
+      type: string;
+      confirmation: string;
+      examples: string;
+    }>;
+  };
   aiOsFocus: string[];
   workflowTemplates: string[];
   recommendedClients: ClientOption[];
@@ -48,8 +83,62 @@ function includesAny(source: string, terms: string[]) {
   return terms.some((term) => source.includes(term));
 }
 
+function normalizeMcpName(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/\s*mcp\s*/g, "")
+    .replace(/[^a-z0-9\u4e00-\u9fa5]+/g, " ")
+    .trim();
+}
+
+function scoreClient(option: ClientOption, corpus: string) {
+  let score = 0;
+
+  if (option.name.includes("Codex")) {
+    if (includesAny(corpus, ["代码", "开发", "prd", "需求", "产品", "编程", "项目"])) score += 4;
+    if (includesAny(corpus, ["linear", "交付", "验收", "验证", "roadmap"])) score += 3;
+  }
+
+  if (option.name.includes("Claude")) {
+    if (includesAny(corpus, ["研究", "分析", "阅读", "长文", "总结", "方案"])) score += 4;
+    if (includesAny(corpus, ["重构", "解释", "梳理"])) score += 2;
+  }
+
+  if (option.name.includes("Cursor") || option.name.includes("Copilot")) {
+    if (includesAny(corpus, ["ide", "编辑器", "局部", "补全", "修复"])) score += 4;
+    if (includesAny(corpus, ["效率", "快速", "日常开发"])) score += 2;
+  }
+
+  if (includesAny(corpus, ["内容", "写作", "选题", "视频", "脚本", "创作"])) {
+    if (option.name.includes("Claude")) score += 2;
+    if (option.name.includes("Codex")) score += 1;
+  }
+
+  return score;
+}
+
+function scoreMcp(option: McpOption, corpus: string) {
+  let score = 0;
+
+  if (option.name.includes("Linear") && includesAny(corpus, ["linear", "项目", "交付", "roadmap", "issue", "需求"])) {
+    score += 4;
+  }
+  if (option.name.includes("Knowledge") && includesAny(corpus, ["知识", "文档", "sop", "规范", "内容", "资料"])) {
+    score += 4;
+  }
+  if (option.name.includes("Database") && includesAny(corpus, ["数据", "数据库", "指标", "行为", "资产"])) {
+    score += 4;
+  }
+  if (option.name.includes("Design") && includesAny(corpus, ["ui", "ux", "figma", "mobbin", "设计", "高保真"])) {
+    score += 4;
+  }
+
+  return score;
+}
+
 export function buildDiagnosis(input: IntakeInput): DiagnosisProfile {
-  const corpus = [input.role, input.goal, input.clients, input.tasks, input.concerns].join(" ").toLowerCase();
+  const corpus = [input.role, input.goal, input.clients, input.tokenStatus, input.mcpSelections.join(" "), input.tasks, input.concerns].join(" ").toLowerCase();
+  const normalizedSelections = new Set(input.mcpSelections.map(normalizeMcpName));
 
   const usesManyClients = input.clients.split(/[、,，/]/).filter(Boolean).length >= 3;
   const mentionsVerificationRisk = includesAny(corpus, ["验证", "风险", "误删", "乱改", "权限", "发布"]);
@@ -77,13 +166,92 @@ export function buildDiagnosis(input: IntakeInput): DiagnosisProfile {
 
   const roleLabel = mentionsCode && mentionsContent ? "复合型创作者 / Builder" : mentionsCode ? "Builder / 开发型用户" : mentionsContent ? "内容型用户" : "知识工作者";
 
-  const defaultStackReason = mentionsCode
-    ? "你的任务里有明显的文档驱动和交付需求，Codex + GPT-5 系列更适合作为主力执行组合。"
-    : "你的任务偏信息整理与工作流配置，先用推荐主力组合建立统一规则，再按场景补其他客户端。";
-
   const permissionMode = mentionsVerificationRisk
     ? "建议从“可读 + 限制写入 + 高风险动作人工确认”启动。"
     : "建议从“可读 + 可写本地文件 + 真实世界动作人工确认”启动。";
+  const permissionModes = [
+    {
+      name: "advisory",
+      label: "只建议",
+      summary: "只做分析、规划和建议，不直接触发文件修改或命令执行。",
+      fit: "适合高风险决策、陌生领域探索、需要先确认方向的任务。",
+    },
+    {
+      name: "read",
+      label: "可读",
+      summary: "允许读取代码、文档、知识库和任务系统，但不直接改动。",
+      fit: "适合诊断、审阅、信息汇总、需求理解与方案比较。",
+    },
+    {
+      name: "write",
+      label: "可写",
+      summary: "允许修改本地文件，但重要变更需要提交门和结果验证。",
+      fit: "适合 PRD 落地、代码改动、文档整理和结构化交付。",
+    },
+    {
+      name: "execute",
+      label: "可执行",
+      summary: "允许运行本地命令，但高风险动作仍需人工确认。",
+      fit: "适合需要测试、构建、脚本执行和端到端验证的项目任务。",
+    },
+  ] as const;
+  const startModeName = mentionsVerificationRisk ? "read" : mentionsCode ? "write" : "read";
+  const startMode = permissionModes.find((item) => item.name === startModeName) ?? permissionModes[1];
+  const actionBoundaries = [
+    {
+      type: "本地动作",
+      confirmation: "可在当前权限范围内默认执行，但关键改动后必须验证结果。",
+      examples: "读取文件、修改本地代码、生成文档、运行 lint / test / build。",
+    },
+    {
+      type: "真实世界动作",
+      confirmation: "必须人工确认后再执行，不因本地无报错而自动视为完成。",
+      examples: "发布、付款、删除重要数据、发送消息、提交最终生产变更。",
+    },
+    {
+      type: "外部系统动作",
+      confirmation: "默认保守处理；只有明确授权和目标系统上下文完整时才允许推进。",
+      examples: "写入数据库、改动第三方项目管理系统、调用生产 API、修改线上配置。",
+    },
+  ];
+
+  const modelRecommendation = mentionsCode
+    ? "GPT-5 系列高推理模型"
+    : mentionsContent
+      ? "GPT-5 系列通用高质量模型"
+      : "GPT-5 系列通用模型";
+
+  const deliveryStyle = mentionsCode
+    ? "PRD -> issue -> 实现 -> 验证 -> 证据"
+    : mentionsContent
+      ? "选题 -> 产出 -> 复核 -> 沉淀"
+      : "目标 -> 任务 -> 执行 -> 复盘";
+
+  const tokenStatus = (input.tokenStatus || "need-token") as DiagnosisProfile["tokenPlan"]["status"];
+  const tokenPlan =
+    tokenStatus === "has-token"
+      ? {
+          status: tokenStatus,
+          label: "已有 Token",
+          guidance: "你已经具备稳定接入条件，配置重点应转向默认模型、成本预算和高频工作流绑定。",
+          valueSummary: "适合直接把 GPT 质量优势接入日常协作，减少额外切换成本。",
+          riskBoundary: "仍需明确额度、稳定性和供应责任边界，不把外部 Token 视为平台官方 SLA。",
+        }
+      : tokenStatus === "skip-token"
+        ? {
+            status: tokenStatus,
+            label: "暂不接入 Token",
+            guidance: "先完成主流程搭建和 AI-OS 生成，后续再补 Token 层，不影响当前协作底座建立。",
+            valueSummary: "适合先验证工作流价值，再决定是否接入更高质量模型能力。",
+            riskBoundary: "当前不承诺 GPT Token 路径，避免在未准备好时引入新的成本和依赖。",
+          }
+        : {
+            status: tokenStatus,
+            label: "需要接入 Token",
+            guidance: "建议保留 GPT Token 入口，作为默认高质量模型方案的接入通道，但不阻塞当前主流程。",
+            valueSummary: "适合希望获得更高质量与更好性价比的人群，后续可承接商业化转化。",
+            riskBoundary: "需要提前说明费用、稳定性和责任边界，避免把通道能力误解为零风险基础设施。",
+          };
 
   const aiOsFocus = [
     "统一你的目标、角色、任务边界和表达偏好",
@@ -111,8 +279,92 @@ export function buildDiagnosis(input: IntakeInput): DiagnosisProfile {
     workflowTemplates.push("需求到实现的交付模板");
   }
 
-  const clientRanking = [...recommendedClients];
-  const mcpRanking = [...recommendedMcp];
+  const clientRanking = [...recommendedClients]
+    .map((option) => {
+      const score = scoreClient(option, corpus);
+      let rationale = "适合作为辅助层，补足主力客户端覆盖不到的场景。";
+
+      if (option.name.includes("Codex")) {
+        rationale = mentionsCode
+          ? "你当前任务明显带有项目交付、文档驱动或代码执行特征，它更适合作为主力推进端到端工作。"
+          : "即使不以代码为主，它也适合承接结构化执行、文件落地和可验证交付。";
+      } else if (option.name.includes("Claude")) {
+        rationale = mentionsContent || includesAny(corpus, ["研究", "分析", "阅读", "总结"])
+          ? "你当前需要较强的长文本理解、研究和方案梳理能力，它适合作为分析与解释层。"
+          : "它适合作为第二客户端，承接复杂解释、备选方案和长文档处理。";
+      } else if (option.name.includes("Cursor") || option.name.includes("Copilot")) {
+        rationale = "适合作为 IDE 内局部加速层，用于补全、修复和小范围实现，而不是全链路完成判断。";
+      }
+
+      return {
+        ...option,
+        recommended: false,
+        model: option.name.includes("Codex") ? modelRecommendation : option.name.includes("Claude") ? "高质量长文本模型" : "IDE 内默认模型",
+        permissionMode: option.name.includes("Codex")
+          ? permissionMode
+          : option.name.includes("Claude")
+            ? "建议从“可读 + 方案讨论”为主启动。"
+            : "建议从“局部辅助 + 人工确认合并”启动。",
+        deliveryStyle: option.name.includes("Codex")
+          ? deliveryStyle
+          : option.name.includes("Claude")
+            ? "问题理解 -> 方案比较 -> 输出建议"
+            : "局部编辑 -> 人工复核 -> 合并到主流程",
+        rationale,
+        _score: score,
+      };
+    })
+    .sort((a, b) => b._score - a._score || Number(Boolean(b.recommended)) - Number(Boolean(a.recommended)) || a.name.localeCompare(b.name))
+    .map((option, index) => {
+      const { _score, ...rest } = option as ClientOption & { _score: number };
+      return { ...rest, recommended: index === 0 };
+    });
+
+  const defaultStackReason = `默认推荐 ${clientRanking[0]?.name ?? "主力组合"}，因为${clientRanking[0]?.rationale ?? "它最适合当前任务"}。`;
+
+  const mcpRanking = [...recommendedMcp]
+    .map((option) => {
+      const score = scoreMcp(option, corpus);
+      let state: McpOption["state"] = option.state;
+      let rationale = option.description;
+
+      if (option.name.includes("Linear")) {
+        rationale = "适合把 roadmap、issue、证据和完成条件拉进同一执行链路，减少聊天驱动漂移。";
+      } else if (option.name.includes("Knowledge")) {
+        rationale = "适合把个人文档、SOP 和长期知识沉淀成可检索的共享上下文。";
+      } else if (option.name.includes("Database")) {
+        rationale = "适合把业务数据、资产和指标接进来，支持更强的闭环优化。";
+      } else if (option.name.includes("Design")) {
+        rationale = "适合在 UI 高保真阶段接设计参考源，而不是一开始就增加复杂度。";
+      }
+
+      if (score >= 4) {
+        state = "recommended";
+      } else if (score >= 2 && state === "later") {
+        state = "optional";
+      }
+
+      const selected = normalizedSelections.has(normalizeMcpName(option.name));
+      return { ...option, state, rationale, selected, _score: score };
+    })
+    .sort((a, b) => b._score - a._score || a.name.localeCompare(b.name))
+    .map((option) => {
+      const { _score, ...rest } = option as McpOption & { _score: number };
+      return rest;
+    });
+
+  const selectedMcp = mcpRanking.filter((item) => item.selected).map((item) => item.name);
+  const mcpPlan = selectedMcp.length > 0
+    ? {
+        selected: selectedMcp,
+        fallbackMessage: "即使后续关闭这些 MCP，AI-OS 仍可继续作为本地规则层使用。",
+        selectionSummary: `已选择 ${selectedMcp.join("、")} 作为当前接入层。`,
+      }
+    : {
+        selected: [],
+        fallbackMessage: "当前未接入任何 MCP，也可以继续使用 AI-OS、客户端适配文件和本地规则沉淀。",
+        selectionSummary: "当前选择先不接入 MCP，后续可按真实需求逐步补上。",
+      };
 
   return {
     roleLabel,
@@ -122,6 +374,15 @@ export function buildDiagnosis(input: IntakeInput): DiagnosisProfile {
     summary: `你当前最适合先建立一个统一 AI 协作底座，把 ${input.clients || "多个客户端"} 和高频任务串到同一套规则里。`,
     defaultStackReason,
     permissionMode,
+    modelRecommendation,
+    deliveryStyle,
+    tokenPlan,
+    mcpPlan,
+    permissionPlan: {
+      startMode,
+      modes: permissionModes.map((item) => ({ ...item })),
+      actionBoundaries,
+    },
     aiOsFocus,
     workflowTemplates,
     recommendedClients: clientRanking,
@@ -146,6 +407,9 @@ export function buildAiOsArtifact(input: IntakeInput, diagnosis: DiagnosisProfil
   if (input.concerns) {
     operatingRules.push(`风险优先级：重点防止 ${input.concerns}。`);
   }
+  operatingRules.push(`GPT Token 状态：${diagnosis.tokenPlan.label}。${diagnosis.tokenPlan.riskBoundary}`);
+  operatingRules.push(`MCP 策略：${diagnosis.mcpPlan.selectionSummary}`);
+  operatingRules.push(`权限起点：${diagnosis.permissionPlan.startMode.label}。${diagnosis.permissionPlan.startMode.summary}`);
 
   const clientProfiles = [
     {
@@ -211,6 +475,34 @@ export function buildAiOsArtifact(input: IntakeInput, diagnosis: DiagnosisProfil
       purpose: "说明接入后如何验证客户端真的读到了这套规则。",
     },
     {
+      path: "AI-OS/install/environment-check.md",
+      purpose: "记录当前本地环境、客户端入口和关键落位目标的健康检查结果。",
+    },
+    {
+      path: "AI-OS/install/existing-rules-scan.md",
+      purpose: "记录当前工作区已有规则文件、兼容状态与潜在冲突点。",
+    },
+    {
+      path: "AI-OS/install/diff-merge-plan.md",
+      purpose: "记录目标文件的结构化 diff 预览与合并建议。",
+    },
+    {
+      path: "AI-OS/install/sensitive-risk-guard.md",
+      purpose: "记录敏感信息检查结果、风险原因与权限影响。",
+    },
+    {
+      path: "AI-OS/install/mcp-health.md",
+      purpose: "记录已选 MCP 的连接状态、失败原因与 fallback 说明。",
+    },
+    {
+      path: "AI-OS/mcp/selection.md",
+      purpose: "记录当前选择接入的 MCP、原因与 fallback 说明。",
+    },
+    {
+      path: "AI-OS/permissions/boundaries.md",
+      purpose: "记录权限模式、动作边界与确认要求。",
+    },
+    {
       path: "AI-OS/templates/AGENTS.md.template",
       purpose: "给 Codex 或类似代理式客户端使用的项目级说明模板。",
     },
@@ -258,6 +550,27 @@ ${input.tasks || "待补充高频任务"}
 ## Main Concerns
 ${input.concerns || "待补充风险边界"}
 
+## GPT Token
+${diagnosis.tokenPlan.label}
+
+## MCP Selection
+${diagnosis.mcpPlan.selectionSummary}
+
+## Working Style
+- Prefer document-driven execution over chat-only improvisation
+- Keep one shared source of truth across clients and projects
+- Escalate when real-world actions, deletion, payment, or external writes are involved
+
+## Success Criteria
+- Output is reusable in the next project, not only correct for the current chat
+- Important work includes verification evidence, not just “seems done”
+- New rules, exceptions, and learnings are written back into AI-OS
+
+## Decision Boundaries
+- Low-risk drafting and local organization can proceed inside agreed permission scope
+- Major behavior changes, external writes, and irreversible actions require confirmation
+- If context is missing, prefer clarifying the boundary before continuing
+
 ## Collaboration Style
 - Prefer reusable workflows over one-off prompts
 - Keep one shared source of truth across AI clients
@@ -272,6 +585,12 @@ ${operatingRules.map((item) => `- ${item}`).join("\n")}
 ## Permission Start Point
 - ${diagnosis.permissionMode}
 
+## Permission Modes
+${diagnosis.permissionPlan.modes.map((item) => `- ${item.label}：${item.summary}`).join("\n")}
+
+## Confirmation Boundaries
+${diagnosis.permissionPlan.actionBoundaries.map((item) => `- ${item.type}：${item.confirmation}`).join("\n")}
+
 ## Verification Standard
 - Important tasks should include result checking, not just "no local error"
 - New projects inherit these rules by default
@@ -282,12 +601,25 @@ ${operatingRules.map((item) => `- ${item}`).join("\n")}
 ## Priority Templates
 ${diagnosis.workflowTemplates.map((item) => `- ${item}`).join("\n")}
 
-## Suggested Execution Chain
+## Standard Delivery Loop
 1. Read identity + rules
 2. Clarify task goal and output
 3. Select the best client for the task
 4. Execute and verify
 5. Write reusable learnings back to memory
+
+## Rule Capture Loop
+1. Notice a repeat decision, exception, or correction
+2. Decide whether it belongs in identity / rules / workflows / decisions
+3. Rewrite it as a reusable rule instead of a one-off note
+4. Apply it in the current task
+5. Reuse it again in the next project to confirm it is stable
+
+## Retrospective Template
+- What repeated friction showed up?
+- Which client handled the task best, and why?
+- What should become a default rule next time?
+- What should stay optional rather than becoming a global rule?
 `;
 
   const codexClientContent = `# Codex Client Profile
@@ -382,6 +714,33 @@ ${diagnosis.bottleneck}
 - ${primaryClient}
 - ${secondaryClient}
 
+## Model Recommendation
+- ${diagnosis.modelRecommendation}
+
+## Delivery Style
+- ${diagnosis.deliveryStyle}
+
+## GPT Token Plan
+- ${diagnosis.tokenPlan.guidance}
+- ${diagnosis.tokenPlan.riskBoundary}
+
+## Rule Promotion Policy
+- Move a learning into \`rules.md\` only when it should apply across multiple tasks or projects
+- Keep task-specific nuance inside \`decisions.md\` until it proves reusable
+- Promote a workflow step only when it improves speed, quality, or verification consistency
+
+## Decision Log Template
+- Context:
+- Decision:
+- Why:
+- Evidence:
+- Should this become a reusable rule:
+
+## Retrospective Capture
+- What worked better than expected:
+- What caused avoidable rework:
+- Which boundary, template, or client rule should change next:
+
 ## Next Updates
 ${firstActions.map((item) => `- ${item}`).join("\n")}
 `;
@@ -474,6 +833,47 @@ ${firstActions.map((item) => `- ${item}`).join("\n")}
 - The setup counts as successful only when multiple clients reflect the same base identity, rules, and workflow expectations
 `;
 
+  const mcpSelectionContent = `# MCP Selection
+
+## Current Selection
+${diagnosis.mcpPlan.selected.length > 0 ? diagnosis.mcpPlan.selected.map((item) => `- ${item}`).join("\n") : "- No MCP selected for now"}
+
+## Why
+${diagnosis.recommendedMcp
+  .filter((item) => diagnosis.mcpPlan.selected.includes(item.name))
+  .map((item) => `- ${item.name}: ${item.rationale}`)
+  .join("\n") || "- Start without MCP and keep the system usable through local AI-OS files and client adapters."}
+
+## Fallback
+- ${diagnosis.mcpPlan.fallbackMessage}
+
+## Next Step
+- Enable only 1-3 high-value MCPs first
+- Document new MCP defaults in decisions memory when they become stable
+`;
+
+  const permissionBoundariesContent = `# Permission Boundaries
+
+## Starting Mode
+- ${diagnosis.permissionPlan.startMode.label}
+- ${diagnosis.permissionPlan.startMode.summary}
+- Fit: ${diagnosis.permissionPlan.startMode.fit}
+
+## Permission Modes
+${diagnosis.permissionPlan.modes
+  .map((item) => `### ${item.label}\n- Summary: ${item.summary}\n- Fit: ${item.fit}`)
+  .join("\n\n")}
+
+## Action Boundaries
+${diagnosis.permissionPlan.actionBoundaries
+  .map((item) => `### ${item.type}\n- Confirmation: ${item.confirmation}\n- Examples: ${item.examples}`)
+  .join("\n\n")}
+
+## Working Rule
+- Prefer the lowest permission mode that can still complete the current task.
+- Local success does not replace confirmation for real-world or external-system actions.
+`;
+
   const agentsTemplateContent = `# AGENTS.md Template
 
 ## Project Identity
@@ -498,6 +898,16 @@ ${firstActions.map((item) => `- ${item}`).join("\n")}
 3. Execute within agreed permissions
 4. Verify outcome
 5. Write reusable learnings back into AI-OS
+
+## Stop Conditions
+- Stop and confirm before real-world actions, deletion, payment, or external writes
+- Stop when the relevant repository or product context is missing
+- Stop if the task requires assumptions that could change project behavior materially
+
+## When To Update AI-OS
+- When a repeated correction becomes a stable rule
+- When a workflow step proves reusable across tasks
+- When an exception should be remembered instead of rediscovered
 `;
 
   const cursorRulesTemplateContent = `# Cursor Project Rules Template
@@ -558,6 +968,18 @@ Do not mark work complete without shared verification standards.
 - Use verification, not intuition, to claim completion
 - Keep high-risk actions behind human confirmation
 - Keep new reusable learnings synchronized back to AI-OS
+
+## Execution Checklist
+1. Read identity, rules, workflows, and decisions
+2. Restate the concrete goal and expected deliverable
+3. Inspect the current repo or document state before editing
+4. Execute within permission boundaries
+5. Verify with evidence and update AI-OS when a rule becomes reusable
+
+## Stop Conditions
+- Do not perform irreversible or external actions without confirmation
+- Do not mark work complete without tests, runtime checks, or equivalent evidence
+- Do not let client-specific habits override shared AI-OS rules
 `;
 
   const cursorRulesCandidateContent = `# Cursor Rules
@@ -593,6 +1015,18 @@ Do not mark work complete without shared verification standards.
 - Follow shared AI-OS rules before implementation
 - Prefer evidence-backed completion
 - Respect human confirmation for high-risk actions
+
+## Required Delivery Pattern
+1. Clarify the request
+2. Read the relevant project files
+3. Implement the smallest aligned change that satisfies the real goal
+4. Verify with tests, screenshots, logs, or output evidence
+5. Write back reusable learnings when a new rule becomes stable
+
+## Update Triggers
+- Add to \`AI-OS/rules.md\` when a boundary should apply broadly
+- Add to \`AI-OS/workflows.md\` when a sequence should repeat
+- Add to \`AI-OS/memory/decisions.md\` when the decision is important but not yet global
 `;
 
   const cursorPlacementCandidateContent = `---
@@ -680,6 +1114,41 @@ Instructions:
       path: "AI-OS/install/verification-checklist.md",
       purpose: "说明接入后如何验证客户端真的读到了这套规则。",
       content: verificationChecklistContent,
+    },
+    {
+      path: "AI-OS/install/environment-check.md",
+      purpose: "记录当前本地环境、客户端入口和关键落位目标的健康检查结果。",
+      content: "# Environment Check\n\nGenerated during export.",
+    },
+    {
+      path: "AI-OS/install/existing-rules-scan.md",
+      purpose: "记录当前工作区已有规则文件、兼容状态与潜在冲突点。",
+      content: "# Existing Rules Scan\n\nGenerated during export.",
+    },
+    {
+      path: "AI-OS/install/diff-merge-plan.md",
+      purpose: "记录目标文件的结构化 diff 预览与合并建议。",
+      content: "# Diff And Merge Plan\n\nGenerated during export.",
+    },
+    {
+      path: "AI-OS/install/sensitive-risk-guard.md",
+      purpose: "记录敏感信息检查结果、风险原因与权限影响。",
+      content: "# Sensitive Risk Guard\n\nGenerated during export.",
+    },
+    {
+      path: "AI-OS/install/mcp-health.md",
+      purpose: "记录已选 MCP 的连接状态、失败原因与 fallback 说明。",
+      content: "# MCP Health And Fallback\n\nGenerated during export.",
+    },
+    {
+      path: "AI-OS/mcp/selection.md",
+      purpose: "记录当前选择接入的 MCP、原因与 fallback 说明。",
+      content: mcpSelectionContent,
+    },
+    {
+      path: "AI-OS/permissions/boundaries.md",
+      purpose: "记录权限模式、动作边界与确认要求。",
+      content: permissionBoundariesContent,
     },
     {
       path: "AI-OS/templates/AGENTS.md.template",
