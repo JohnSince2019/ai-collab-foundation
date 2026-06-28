@@ -35,14 +35,16 @@
 - 目标放置位置与接入验证清单已纳入导出包
 - 更贴近真实接入的客户端模板文件已纳入导出包
 - 候选最终文件与接入检查页已纳入当前产品流
+- M3 复盘 -> 候选规则 -> 确认保存 -> 版本记录 -> 客户端同步闭环已完成
+- M4 的 Profile / Boundaries / Style Card / Source Map / Draft Context / Mother Draft Prompt / Mother Draft Sample 已完成技术实现
 - 本地类型检查与生产构建已通过
 
 下一步优先级：
 
 1. 按 PRD 对应的 milestones `M0-M6` 持续管理项目
-2. 严格按 Linear issue 串行执行当前 `M1`
-3. 当前等待 `JOH-133` 的人工验收结论；在 John 明确 `passed` 前，不进入 `JOH-134`
-4. `JOH-140` 专门负责 UI/UX 高保真落地与截图验收
+2. 严格按 Linear issue 串行执行当前 milestone
+3. 当前 `M4` 仅剩 `JOH-193` 最终联动验收待 John 明确 `passed`
+4. 在 `JOH-193` 最终验收完成前，不进入 `M5`
 
 ## 权威规则
 

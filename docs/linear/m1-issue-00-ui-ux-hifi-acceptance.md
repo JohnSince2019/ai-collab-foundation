@@ -41,9 +41,9 @@
 - 测试结果：passed
 - 输出路径：`/app/onboarding/page.tsx` `/app/configure/page.tsx` `/components/ui.tsx`
 - 截图证据路径：
-  - `docs/linear/evidence/joh-140/onboarding.png`
-  - `docs/linear/evidence/joh-140/configure.png`
-  - `docs/linear/evidence/joh-140/ai-os.png`
-  - `docs/linear/evidence/joh-140/setup-check.png`
+  * `docs/linear/evidence/joh-140/onboarding.png`
+  * `docs/linear/evidence/joh-140/configure.png`
+  * `docs/linear/evidence/joh-140/ai-os.png`
+  * `docs/linear/evidence/joh-140/setup-check.png`
 - 2026-06-28 手动验收结论：onboarding 与 configure 的字体颜色、字号、字重、标题层级和卡片气质已对齐到同一视觉语言；AI-OS 与 setup-check 也保持了同一套页面系统，因此 `JOH-140` 判定通过，可进入 `Done`。
 - 关联本地 docs/linear 文件：`joh-140-review-pack.md` `current-execution-status.md`
