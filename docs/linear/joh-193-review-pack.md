@@ -42,6 +42,7 @@
   - `AI-OS/contentops/mother-draft-prompt.json`
 - `setup-check` 页面已新增 `ContentOps 联动产物检查`
 - `npm run build` / `npm run typecheck` / `npm run test:e2e` 已通过
+- 2026-06-28 晚些时候已再次按 `build -> typecheck -> test:e2e` 复跑，结果仍全部通过
 
 当前唯一未跨过的门：
 
@@ -157,6 +158,16 @@
 - John 是否认可这套母稿上下文与 prompt 包已经达到目标中的“联动验收完成”
 
 也就是说，这不是代码 blocker，而是最终业务验收门。
+
+## 5.1 John 最终 passed 只需要看什么
+
+为了避免最终验收再次变成泛化讨论，John 只需要确认三件事：
+
+1. `draft-context` 是否已经把 ContentOps 在母稿生成前真正需要的定位、边界、风格、来源顺序压缩到位
+2. `mother-draft-prompt` 是否已经足够作为下游 LLM 的直接输入，而不是还需要大量人工二次改写
+3. `mother-draft-sample` 是否已经体现“结构对、方向对、缺失证据有明确标注”，从而可作为联动样例成立
+
+如果以上三项判断均为“是”，则可以给 `JOH-193` 最终 `passed`。
 
 ## 6. 下一步唯一允许动作
 
