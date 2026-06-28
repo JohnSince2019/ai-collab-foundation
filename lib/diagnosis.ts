@@ -57,9 +57,48 @@ export type DiagnosisProfile = {
   recommendedMcp: McpOption[];
 };
 
+export type ContentOpsProfile = {
+  profileVersion: string;
+  source: {
+    role: string;
+    goal: string;
+    tasks: string;
+    concerns: string;
+    diagnosisRoleLabel: string;
+    diagnosisDeliveryStyle: string;
+    diagnosisPermissionMode: string;
+  };
+  positioning: {
+    role: string;
+    archetype: string;
+    positioningStatement: string;
+    northStar: string;
+    primaryOutcome: string;
+  };
+  audience: {
+    primaryAudience: string;
+    audienceNeeds: string[];
+  };
+  topics: {
+    coreTopics: string[];
+    contentPillars: string[];
+  };
+  execution: {
+    preferredFormats: string[];
+    workflowFit: string[];
+    riskFocus: string[];
+  };
+  mappingNotes: Array<{
+    targetField: string;
+    derivedFrom: string[];
+    rationale: string;
+  }>;
+};
+
 export type AiOsArtifact = {
   workspaceName: string;
   northStar: string;
+  contentOpsProfile: ContentOpsProfile;
   operatingRules: string[];
   clientProfiles: Array<{
     name: string;
@@ -89,6 +128,165 @@ function normalizeMcpName(value: string) {
     .replace(/\s*mcp\s*/g, "")
     .replace(/[^a-z0-9\u4e00-\u9fa5]+/g, " ")
     .trim();
+}
+
+function normalizeText(value: string) {
+  return value
+    .replace(/\s+/g, " ")
+    .replace(/[。！？!?,，；;]/g, " ")
+    .trim();
+}
+
+function splitKeywords(value: string) {
+  return normalizeText(value)
+    .split(/[\s/、]+/)
+    .map((item) => item.trim())
+    .filter((item) => item.length >= 2);
+}
+
+function uniqueStrings(items: string[]) {
+  return [...new Set(items.filter(Boolean))];
+}
+
+function inferAudience(role: string, goal: string, tasks: string) {
+  const corpus = `${role} ${goal} ${tasks}`.toLowerCase();
+  if (includesAny(corpus, ["内容", "创作", "写作", "视频", "脚本", "选题"])) {
+    return {
+      primaryAudience: "希望持续输出内容并建立个人影响力的受众",
+      audienceNeeds: [
+        "需要高质量、可持续复用的内容框架",
+        "需要明确定位、边界与表达方式",
+        "需要稳定的内容生产与复盘机制",
+      ],
+    };
+  }
+  if (includesAny(corpus, ["开发", "代码", "产品", "需求", "项目", "技术"])) {
+    return {
+      primaryAudience: "需要把复杂工作流结构化的开发者与产品型用户",
+      audienceNeeds: [
+        "需要更稳定的任务拆解与执行链路",
+        "需要统一规则、验证与证据标准",
+        "需要多客户端协作但不想重复解释上下文",
+      ],
+    };
+  }
+  return {
+    primaryAudience: "需要统一 AI 协作方式的知识工作者",
+    audienceNeeds: [
+      "需要减少重复说明成本",
+      "需要更可控的 AI 权限和边界",
+      "需要把经验沉淀成可复用流程",
+    ],
+  };
+}
+
+function inferFormats(goal: string, tasks: string) {
+  const corpus = `${goal} ${tasks}`.toLowerCase();
+  const formats = ["结构化母稿", "清单式提纲"];
+
+  if (includesAny(corpus, ["写作", "长文", "文章", "公众号"])) {
+    formats.push("长文内容稿");
+  }
+  if (includesAny(corpus, ["视频", "脚本"])) {
+    formats.push("视频脚本");
+  }
+  if (includesAny(corpus, ["复盘", "研究", "分析", "报告"])) {
+    formats.push("分析复盘稿");
+  }
+
+  return uniqueStrings(formats);
+}
+
+export function buildContentOpsProfile(input: IntakeInput, diagnosis: DiagnosisProfile): ContentOpsProfile {
+  const goal = input.goal || diagnosis.summary;
+  const tasks = input.tasks || diagnosis.workflowTemplates.join("、");
+  const concerns = input.concerns || diagnosis.bottleneck;
+  const role = input.role || diagnosis.roleLabel;
+  const roleKeywords = splitKeywords(role);
+  const goalKeywords = splitKeywords(goal);
+  const taskKeywords = splitKeywords(tasks);
+  const audience = inferAudience(role, goal, tasks);
+
+  const archetype = includesAny(`${role} ${goal} ${tasks}`.toLowerCase(), ["内容", "创作", "写作", "视频"])
+    ? "内容驱动型创作者"
+    : includesAny(`${role} ${goal} ${tasks}`.toLowerCase(), ["开发", "代码", "产品", "项目"])
+      ? "产品与交付驱动型 Builder"
+      : "复合型知识工作者";
+
+  const coreTopics = uniqueStrings(
+    [...goalKeywords, ...taskKeywords]
+      .filter((item) => item.length >= 2)
+      .slice(0, 6),
+  );
+
+  const contentPillars = uniqueStrings([
+    goal || diagnosis.summary,
+    tasks.split(/[，,、]/).map((item) => item.trim()).find(Boolean) ?? tasks,
+    diagnosis.deliveryStyle,
+  ]).slice(0, 3);
+
+  const riskFocus = uniqueStrings(
+    concerns
+      .split(/[，,、]/)
+      .map((item) => item.trim())
+      .filter(Boolean),
+  );
+
+  return {
+    profileVersion: "v0.1.0",
+    source: {
+      role: input.role,
+      goal: input.goal,
+      tasks: input.tasks,
+      concerns: input.concerns,
+      diagnosisRoleLabel: diagnosis.roleLabel,
+      diagnosisDeliveryStyle: diagnosis.deliveryStyle,
+      diagnosisPermissionMode: diagnosis.permissionMode,
+    },
+    positioning: {
+      role,
+      archetype,
+      positioningStatement: `${role}，当前核心目标是 ${goal}，并希望通过统一 AI 协作流程把 ${tasks} 变成稳定可复用的内容或交付资产。`,
+      northStar: goal,
+      primaryOutcome: `围绕“${goal}”持续输出可复用、可验证、可沉淀的内容资产。`,
+    },
+    audience,
+    topics: {
+      coreTopics,
+      contentPillars,
+    },
+    execution: {
+      preferredFormats: inferFormats(goal, tasks),
+      workflowFit: uniqueStrings([
+        diagnosis.deliveryStyle,
+        "先读 Profile，再生成内容",
+        "重要内容先约束边界，再进入母稿生成",
+      ]),
+      riskFocus,
+    },
+    mappingNotes: [
+      {
+        targetField: "positioning.positioningStatement",
+        derivedFrom: ["role", "goal", "tasks"],
+        rationale: "把用户身份、当前目标和高频任务组合成 ContentOps 可直接理解的定位陈述。",
+      },
+      {
+        targetField: "audience.*",
+        derivedFrom: ["role", "goal", "tasks", "diagnosis.roleLabel"],
+        rationale: "依据用户类型与任务语义推断首版目标受众和核心需求，方便下游先生成更贴近场景的内容。",
+      },
+      {
+        targetField: "topics.coreTopics / topics.contentPillars",
+        derivedFrom: ["goal", "tasks", "diagnosis.deliveryStyle"],
+        rationale: "先从目标、任务和交付方式里提取最稳定的话题主轴，作为内容母稿输入。",
+      },
+      {
+        targetField: "execution.riskFocus",
+        derivedFrom: ["concerns", "diagnosis.permissionMode"],
+        rationale: "把用户最担心的错误前置成内容生产风险提示，避免下游生成阶段忽略边界。",
+      },
+    ],
+  };
 }
 
 function scoreClient(option: ClientOption, corpus: string) {
@@ -393,6 +591,7 @@ export function buildDiagnosis(input: IntakeInput): DiagnosisProfile {
 export function buildAiOsArtifact(input: IntakeInput, diagnosis: DiagnosisProfile): AiOsArtifact {
   const primaryClient = diagnosis.recommendedClients[0]?.name ?? "Codex + GPT-5 系列";
   const secondaryClient = diagnosis.recommendedClients[1]?.name ?? "Claude Code";
+  const contentOpsProfile = buildContentOpsProfile(input, diagnosis);
   const workspaceName = input.goal
     ? `${input.goal.replace(/[。！？!?,，]/g, "").slice(0, 24)} AI-OS`
     : "Personal AI-OS";
@@ -433,6 +632,14 @@ export function buildAiOsArtifact(input: IntakeInput, diagnosis: DiagnosisProfil
     {
       path: "AI-OS/identity.md",
       purpose: "记录你的角色、目标、工作方式和协作边界。",
+    },
+    {
+      path: "AI-OS/contentops/profile.md",
+      purpose: "给 ContentOps 读取的首版用户定位与 Profile 映射结果。",
+    },
+    {
+      path: "AI-OS/contentops/profile.json",
+      purpose: "给 ContentOps 或其他下游系统直接消费的结构化 Profile 数据。",
     },
     {
       path: "AI-OS/rules.md",
@@ -594,6 +801,37 @@ ${diagnosis.permissionPlan.actionBoundaries.map((item) => `- ${item.type}：${it
 ## Verification Standard
 - Important tasks should include result checking, not just "no local error"
 - New projects inherit these rules by default
+`;
+
+  const contentOpsProfileContent = `# ContentOps Profile
+
+## Profile Version
+${contentOpsProfile.profileVersion}
+
+## Positioning
+- Role: ${contentOpsProfile.positioning.role}
+- Archetype: ${contentOpsProfile.positioning.archetype}
+- Statement: ${contentOpsProfile.positioning.positioningStatement}
+- North Star: ${contentOpsProfile.positioning.northStar}
+- Primary Outcome: ${contentOpsProfile.positioning.primaryOutcome}
+
+## Audience
+- Primary Audience: ${contentOpsProfile.audience.primaryAudience}
+${contentOpsProfile.audience.audienceNeeds.map((item) => `- Need: ${item}`).join("\n")}
+
+## Topics
+${contentOpsProfile.topics.coreTopics.map((item) => `- Core Topic: ${item}`).join("\n")}
+${contentOpsProfile.topics.contentPillars.map((item) => `- Content Pillar: ${item}`).join("\n")}
+
+## Execution
+${contentOpsProfile.execution.preferredFormats.map((item) => `- Preferred Format: ${item}`).join("\n")}
+${contentOpsProfile.execution.workflowFit.map((item) => `- Workflow Fit: ${item}`).join("\n")}
+${contentOpsProfile.execution.riskFocus.map((item) => `- Risk Focus: ${item}`).join("\n")}
+
+## Mapping Notes
+${contentOpsProfile.mappingNotes
+  .map((item) => `### ${item.targetField}\n- Derived From: ${item.derivedFrom.join(", ")}\n- Rationale: ${item.rationale}`)
+  .join("\n\n")}
 `;
 
   const workflowsContent = `# Workflows
@@ -1066,6 +1304,16 @@ Instructions:
       content: identityContent,
     },
     {
+      path: "AI-OS/contentops/profile.md",
+      purpose: "给 ContentOps 读取的首版用户定位与 Profile 映射结果。",
+      content: contentOpsProfileContent,
+    },
+    {
+      path: "AI-OS/contentops/profile.json",
+      purpose: "给 ContentOps 或其他下游系统直接消费的结构化 Profile 数据。",
+      content: `${JSON.stringify(contentOpsProfile, null, 2)}\n`,
+    },
+    {
       path: "AI-OS/rules.md",
       purpose: "记录统一规则、权限等级、验证要求和禁止事项。",
       content: rulesContent,
@@ -1200,6 +1448,7 @@ Instructions:
   return {
     workspaceName,
     northStar: `让 AI 按统一规则稳定协作，围绕“${input.goal || "高质量完成关键任务"}”持续复利。`,
+    contentOpsProfile,
     operatingRules,
     clientProfiles,
     starterFiles,

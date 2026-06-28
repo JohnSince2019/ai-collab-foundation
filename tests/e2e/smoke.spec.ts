@@ -52,8 +52,16 @@ test("home and key flows render", async ({ page }) => {
   await expect(page.getByText("AI-OS/install/diff-merge-plan.md").first()).toBeVisible();
   await expect(page.getByText("AI-OS/install/sensitive-risk-guard.md").first()).toBeVisible();
   await expect(page.getByText("AI-OS/install/mcp-health.md").first()).toBeVisible();
+  await expect(page.getByText("AI-OS/contentops/profile.md").first()).toBeVisible();
+  await expect(page.getByText("AI-OS/contentops/profile.json").first()).toBeVisible();
   await expect(page.getByText("AI-OS/install/target-locations.md").first()).toBeVisible();
   await expect(page.getByText("AI-OS/install/verification-checklist.md").first()).toBeVisible();
+  await expect(page.getByText("ContentOps Profile 映射")).toBeVisible();
+  await expect(page.getByText("字段映射说明")).toBeVisible();
+  await expect(page.getByText("定位陈述", { exact: true })).toBeVisible();
+  await expect(page.getByText("目标受众", { exact: true })).toBeVisible();
+  await expect(page.getByText("核心话题与内容支柱", { exact: true })).toBeVisible();
+  await expect(page.getByText("positioning.positioningStatement", { exact: true })).toBeVisible();
   await expect(page.getByText("本地环境检测")).toBeVisible();
   await expect(page.getByText("已有规则识别与冲突扫描")).toBeVisible();
   await expect(page.getByText("配置 diff 预览与合并建议")).toBeVisible();
@@ -89,6 +97,7 @@ test("home and key flows render", async ({ page }) => {
   await expect(page.getByText("AI-OS/candidates/claude-code/session-start.md").first()).toBeVisible();
   await expect(page.getByText("所有客户端共享同一套目标、角色、任务边界与输出标准。").first()).toBeVisible();
   await expect(page.getByText("# Identity").first()).toBeVisible();
+  await expect(page.getByText("# ContentOps Profile")).toBeVisible();
   await expect(page.getByText("# Claude Code Client Profile")).toBeVisible();
   await expect(page.getByText("# Adapter Setup Guide")).toBeVisible();
   await expect(page.getByText("# MCP Selection").last()).toBeVisible();

@@ -4,9 +4,9 @@
 
 ## 1. 当前阶段
 
-- 项目状态：`M4 queued`
+- 项目状态：`M4 in progress`
 - 当前 milestone：`M4 · ContentOps 联动`
-- 当前目标：先执行 `JOH-189` 用户定位读取与 Profile 映射，再按顺序推进内容边界、表达风格、素材来源与母稿注入
+- 当前目标：继续推进 `M4 · ContentOps 联动`，当前下一项为 `JOH-190` 内容边界读取与规则注入
 
 ## 1.1 Linear 真实项目结构
 
@@ -79,7 +79,7 @@ Linear 项目：`AI Collab Foundation`
 - `JOH-186` `M3-03 · 候选规则确认保存到 AI-OS` -> `Done`
 - `JOH-187` `M3-04 · 规则轻量版本与变更摘要` -> `Done`
 - `JOH-188` `M3-05 · 客户端同步提示与收尾验收` -> `Done`
-- `JOH-189` `M4-01 · 用户定位读取与 Profile 映射` -> `Todo`
+- `JOH-189` `M4-01 · 用户定位读取与 Profile 映射` -> `Done`
 - `JOH-190` `M4-02 · 内容边界读取与规则注入` -> `Todo`
 - `JOH-191` `M4-03 · 表达风格读取与风格卡生成` -> `Todo`
 - `JOH-192` `M4-04 · 高频素材来源读取与结构化映射` -> `Todo`
@@ -96,7 +96,7 @@ Linear 项目：`AI Collab Foundation`
 ## 4. 当前结论
 
 - M0、M1、M2、M3 已按串行规则执行完成
-- 当前下一执行项为 `JOH-189`，对应 `M4-01 · 用户定位读取与 Profile 映射`
+- 当前下一执行项为 `JOH-190`，对应 `M4-02 · 内容边界读取与规则注入`
 - M4 的执行顺序为：用户定位 -> 内容边界 -> 表达风格 -> 素材来源 -> 母稿注入与联动验收
 
 ## 5. 启动前检查
@@ -119,6 +119,6 @@ Linear 项目：`AI Collab Foundation`
 
 下一步重点是继续按 M4 顺序推进：
 
-1. 将 `JOH-189` 设为 `In Progress` 后开始实现 M4-01
+1. 将 `JOH-190` 设为 `In Progress` 后开始实现 M4-02
 2. 每完成一个 M4 issue，都同步更新 Linear 与本地 `docs/linear/`
 3. M4 全部 issues 完成后，先向 John 汇报，再等待是否继续进入 M5
