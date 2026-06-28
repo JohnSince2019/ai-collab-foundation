@@ -50,6 +50,8 @@ Linear 项目：`AI Collab Foundation`
 - `JOH-140` 所需截图证据与手动验收结论已补齐
 - M2 第一项 `JOH-176` 已完成首版本地环境检测闭环
 - M0 / M1 / M2 对应 Linear issues 已全部创建并完成
+- M4 已补齐 `profile / boundaries / style-card / source-map / draft-context / mother-draft-prompt / mother-draft-sample` 七组 ContentOps 联动产物
+- `JOH-193` 对应的 `build -> typecheck -> test:e2e` 已于 2026-06-28 再次复跑通过
 - `npm run typecheck` 已通过
 - `npm run build` 已通过
 - `npm run test:e2e` 已通过
@@ -121,4 +123,5 @@ Linear 项目：`AI Collab Foundation`
 
 1. 由 John 对 `JOH-193` 给出最终 `passed`
 2. 在收到 `passed` 前，保持 `JOH-193` 为 `In Progress`
-3. `JOH-193` 验收完成后，M4 全部 issue 才可统一收口并等待是否进入 M5
+3. John 最终只需确认 `draft-context`、`mother-draft-prompt`、`mother-draft-sample` 三项是否达到业务联动预期
+4. `JOH-193` 验收完成后，M4 全部 issue 才可统一收口并等待是否进入 M5

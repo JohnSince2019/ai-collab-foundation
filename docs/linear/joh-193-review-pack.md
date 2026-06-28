@@ -71,6 +71,8 @@
 - `AI-OS/contentops/draft-context.json`
 - `AI-OS/contentops/mother-draft-prompt.md`
 - `AI-OS/contentops/mother-draft-prompt.json`
+- `AI-OS/contentops/mother-draft-sample.md`
+- `AI-OS/contentops/mother-draft-sample.json`
 
 ### 当前最关键的导出物
 
@@ -83,6 +85,11 @@
 
 - [mother-draft-prompt.md](/Users/john/Desktop/AI/Solutions/ai-collab-foundation/generated-ai-os/建立统一-ai-协作底座-ai-os/AI-OS/contentops/mother-draft-prompt.md)
 - [mother-draft-prompt.json](/Users/john/Desktop/AI/Solutions/ai-collab-foundation/generated-ai-os/建立统一-ai-协作底座-ai-os/AI-OS/contentops/mother-draft-prompt.json)
+
+母稿干跑样例：
+
+- [mother-draft-sample.md](/Users/john/Desktop/AI/Solutions/ai-collab-foundation/generated-ai-os/建立统一-ai-协作底座-ai-os/AI-OS/contentops/mother-draft-sample.md)
+- [mother-draft-sample.json](/Users/john/Desktop/AI/Solutions/ai-collab-foundation/generated-ai-os/建立统一-ai-协作底座-ai-os/AI-OS/contentops/mother-draft-sample.json)
 
 ### 页面截图证据
 
@@ -106,6 +113,8 @@
    - 用于母稿生成前统一读取关键上下文
 2. `mother-draft-prompt.*`
    - 用于直接把这套上下文转成可执行的母稿生成提示
+3. `mother-draft-sample.*`
+   - 用于干跑检查母稿结构是否合理，以及哪些真实证据仍待补充
 
 ### 用户侧验收入口
 
