@@ -198,6 +198,10 @@ export function buildAiOsArtifact(input: IntakeInput, diagnosis: DiagnosisProfil
       path: "AI-OS/memory/decisions.md",
       purpose: "沉淀关键决策、例外情况和后续沿用规则。",
     },
+    {
+      path: "AI-OS/install/adapter-setup.md",
+      purpose: "说明如何把这套 AI-OS 与不同客户端接起来。",
+    },
   ];
 
   const identityContent = `# Identity
@@ -342,6 +346,38 @@ ${diagnosis.bottleneck}
 ${firstActions.map((item) => `- ${item}`).join("\n")}
 `;
 
+  const installGuideContent = `# Adapter Setup Guide
+
+## 1. Shared Base
+- Keep \`AI-OS/identity.md\`, \`rules.md\`, \`workflows.md\` as the single source of truth
+- Let every client read the same base files before task execution
+
+## 2. Codex
+- Put project rules in \`AGENTS.md\` or equivalent repo instructions
+- Reference \`AI-OS/clients/codex.md\` for default execution style
+- Prefer long-running tasks, local docs, and evidence-based completion
+
+## 3. Claude Code
+- Use \`AI-OS/clients/claude-code.md\` as the discussion and analysis profile
+- Feed identity, rules, and workflows before long reasoning sessions
+- Keep final execution criteria aligned with the shared AI-OS rules
+
+## 4. Cursor
+- Use \`AI-OS/clients/cursor.md\` for IDE-level assistance rules
+- Treat Cursor as a local acceleration layer, not the source of truth
+- Route major implementation and completion checks back to the main workflow
+
+## 5. Copilot
+- Use \`AI-OS/clients/copilot.md\` as a style and boundary reference
+- Keep Copilot focused on code completion and short snippets
+- Do not treat inline suggestions as verified completion
+
+## 6. MCP / External Systems
+- Connect 1-2 highest-value systems first
+- Record which MCPs are enabled inside the AI-OS rules or decisions memory
+- Update AI-OS when a new integration becomes part of the default workflow
+`;
+
   const fileContents = [
     {
       path: "AI-OS/identity.md",
@@ -382,6 +418,11 @@ ${firstActions.map((item) => `- ${item}`).join("\n")}
       path: "AI-OS/memory/decisions.md",
       purpose: "沉淀关键决策、例外情况和后续沿用规则。",
       content: decisionsContent,
+    },
+    {
+      path: "AI-OS/install/adapter-setup.md",
+      purpose: "说明如何把这套 AI-OS 与不同客户端接起来。",
+      content: installGuideContent,
     },
   ];
 

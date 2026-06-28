@@ -24,9 +24,11 @@ test("home and key flows render", async ({ page }) => {
   await expect(page.getByText("AI-OS/clients/claude-code.md").first()).toBeVisible();
   await expect(page.getByText("AI-OS/clients/cursor.md").first()).toBeVisible();
   await expect(page.getByText("AI-OS/clients/copilot.md").first()).toBeVisible();
+  await expect(page.getByText("AI-OS/install/adapter-setup.md").first()).toBeVisible();
   await expect(page.getByText("所有客户端共享同一套目标、角色、任务边界与输出标准。").first()).toBeVisible();
   await expect(page.getByText("# Identity")).toBeVisible();
   await expect(page.getByText("# Claude Code Client Profile")).toBeVisible();
+  await expect(page.getByText("# Adapter Setup Guide")).toBeVisible();
   await expect(page.getByText("# Rules")).toBeVisible();
   await page.getByRole("button", { name: "写出 AI-OS 文件" }).click();
   await expect(page.getByText("AI-OS 已写出到本地目录")).toBeVisible();
