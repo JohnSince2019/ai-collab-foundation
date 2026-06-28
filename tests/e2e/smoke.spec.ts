@@ -64,6 +64,8 @@ test("home and key flows render", async ({ page }) => {
   await expect(page.getByText("AI-OS/contentops/draft-context.json").first()).toBeVisible();
   await expect(page.getByText("AI-OS/contentops/mother-draft-prompt.md").first()).toBeVisible();
   await expect(page.getByText("AI-OS/contentops/mother-draft-prompt.json").first()).toBeVisible();
+  await expect(page.getByText("AI-OS/contentops/mother-draft-sample.md").first()).toBeVisible();
+  await expect(page.getByText("AI-OS/contentops/mother-draft-sample.json").first()).toBeVisible();
   await expect(page.getByText("AI-OS/install/target-locations.md").first()).toBeVisible();
   await expect(page.getByText("AI-OS/install/verification-checklist.md").first()).toBeVisible();
   await expect(page.getByText("ContentOps Profile 映射")).toBeVisible();
@@ -78,6 +80,8 @@ test("home and key flows render", async ({ page }) => {
   await expect(page.getByText("Draft Context 字段说明")).toBeVisible();
   await expect(page.getByText("Mother Draft Prompt", { exact: true })).toBeVisible();
   await expect(page.getByText("Prompt 字段说明")).toBeVisible();
+  await expect(page.getByText("Mother Draft Sample", { exact: true })).toBeVisible();
+  await expect(page.getByText("Sample 字段说明")).toBeVisible();
   await expect(page.getByText("定位陈述", { exact: true })).toBeVisible();
   await expect(page.getByText("目标受众", { exact: true })).toBeVisible();
   await expect(page.getByText("核心话题与内容支柱", { exact: true })).toBeVisible();
@@ -100,6 +104,10 @@ test("home and key flows render", async ({ page }) => {
   await expect(page.getByText("System Intent", { exact: true })).toBeVisible();
   await expect(page.getByText("Usage Notes", { exact: true })).toBeVisible();
   await expect(page.getByText("userPrompt", { exact: true })).toBeVisible();
+  await expect(page.getByText("Title", { exact: true })).toBeVisible();
+  await expect(page.getByText("Intro", { exact: true })).toBeVisible();
+  await expect(page.getByText("Missing Evidence", { exact: true })).toBeVisible();
+  await expect(page.getByText("missingEvidence", { exact: true })).toBeVisible();
   await expect(page.getByText("本地环境检测")).toBeVisible();
   await expect(page.getByText("已有规则识别与冲突扫描")).toBeVisible();
   await expect(page.getByText("配置 diff 预览与合并建议")).toBeVisible();
@@ -141,6 +149,7 @@ test("home and key flows render", async ({ page }) => {
   await expect(page.getByText("# Source Map")).toBeVisible();
   await expect(page.getByText("# Draft Context Bundle")).toBeVisible();
   await expect(page.getByText("# Mother Draft Prompt Pack")).toBeVisible();
+  await expect(page.getByText("# Mother Draft Sample")).toBeVisible();
   await expect(page.getByText("# Claude Code Client Profile")).toBeVisible();
   await expect(page.getByText("# Adapter Setup Guide")).toBeVisible();
   await expect(page.getByText("# MCP Selection").last()).toBeVisible();
@@ -178,6 +187,7 @@ test("home and key flows render", async ({ page }) => {
   await expect(page.getByText("MCP 连接状态检测与失败兜底")).toBeVisible();
   await expect(page.getByText("ContentOps 联动产物检查")).toBeVisible();
   await expect(page.getByText("AI-OS/contentops/mother-draft-prompt.md").last()).toBeVisible();
+  await expect(page.getByText("AI-OS/contentops/mother-draft-sample.md").last()).toBeVisible();
   await expect(page.getByText("已导出但未放置")).toBeVisible();
   await expect(page.getByText("已放置待验证")).toBeVisible();
   await expect(page.getByText("已接入可使用")).toBeVisible();

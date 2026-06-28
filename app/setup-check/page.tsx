@@ -364,7 +364,7 @@ export default async function SetupCheckPage({
               验收重点：先确认
               {" "}
               <span className="font-mono text-slate-600">
-                profile -&gt; boundaries -&gt; style-card -&gt; source-map -&gt; draft-context -&gt; mother-draft-prompt
+                profile -&gt; boundaries -&gt; style-card -&gt; source-map -&gt; draft-context -&gt; mother-draft-prompt -&gt; mother-draft-sample
               </span>
               {" "}
               已完整导出，再确认下游内容生成不会绕过这些文件。

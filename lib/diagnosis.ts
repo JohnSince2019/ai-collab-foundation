@@ -225,6 +225,22 @@ export type DraftPromptPack = {
   }>;
 };
 
+export type DraftSample = {
+  sampleVersion: string;
+  title: string;
+  intro: string;
+  sections: Array<{
+    heading: string;
+    points: string[];
+  }>;
+  missingEvidence: string[];
+  mappingNotes: Array<{
+    targetField: string;
+    derivedFrom: string[];
+    rationale: string;
+  }>;
+};
+
 export type AiOsArtifact = {
   workspaceName: string;
   northStar: string;
@@ -234,6 +250,7 @@ export type AiOsArtifact = {
   sourceMap: SourceMap;
   draftContextBundle: DraftContextBundle;
   draftPromptPack: DraftPromptPack;
+  draftSample: DraftSample;
   operatingRules: string[];
   clientProfiles: Array<{
     name: string;
@@ -1199,6 +1216,62 @@ ${bundle.reviewChecklist.map((item) => `- ${item}`).join("\n")}
   };
 }
 
+export function buildDraftSample(bundle: DraftContextBundle): DraftSample {
+  const firstPillar = bundle.draftInputs.contentPillars[0] ?? "真实工作转内容";
+  const secondPillar = bundle.draftInputs.contentPillars[1] ?? "结构化交付";
+  const thirdPillar = bundle.draftInputs.contentPillars[2] ?? "验证与复用";
+
+  return {
+    sampleVersion: "v0.1.0",
+    title: `不是多写 prompt，而是先搭好 ${firstPillar} 的上游协作底座`,
+    intro: `如果一个人已经在真实工作里不断做判断、拆任务、改代码、复盘，那么内容生产真正缺的往往不是“写作灵感”，而是把这些高价值上下文稳定导入母稿生成链路。`,
+    sections: [
+      {
+        heading: "为什么内容母稿不能脱离真实工作上下文",
+        points: [
+          `没有 ${bundle.draftInputs.positioning} 这一层定位，内容容易变成泛化输出。`,
+          "没有边界层，母稿容易写得像是完整答案，但其实越过了用户不希望 AI 越过的线。",
+        ],
+      },
+      {
+        heading: "上游四层上下文应该怎样进入母稿流程",
+        points: [
+          `先用 ${secondPillar} 把定位、边界、风格和来源顺序化，而不是一次性丢给模型一大段背景。`,
+          `再用 ${bundle.draftInputs.preDraftSources[0] ?? "结构化来源链路"} 确保母稿不是凭空生成。`,
+        ],
+      },
+      {
+        heading: "怎样让这份母稿变成可复用资产",
+        points: [
+          `输出结构要服务于 ${thirdPillar}，也就是后续可改写、可分发、可复盘。`,
+          "每一段都要能回答：它来自什么真实来源、是否符合风格、是否越过边界。",
+        ],
+      },
+    ],
+    missingEvidence: [
+      "需要补充一个真实项目或任务案例，证明这套上下文注入后的母稿质量提升。",
+      "需要在 ContentOps 真正消费这些文件后，再确认平台化联动是否顺滑。",
+    ],
+    mappingNotes: [
+      {
+        targetField: "title / intro",
+        derivedFrom: ["draftContextBundle.draftInputs.positioning", "contentPillars"],
+        rationale: "让样例一开头就体现出它确实继承了定位与主题支柱，而不是随机起题。",
+      },
+      {
+        targetField: "sections",
+        derivedFrom: ["contentPillars", "draftFlow", "reviewChecklist"],
+        rationale: "用母稿流程和验收清单反推一个最小可读样例，方便人工判断这套上下文注入是否合理。",
+      },
+      {
+        targetField: "missingEvidence",
+        derivedFrom: ["current acceptance boundary"],
+        rationale: "显式指出当前还缺哪类真实联动证据，避免把样例误判成最终业务效果证明。",
+      },
+    ],
+  };
+}
+
 export function buildAiOsArtifact(input: IntakeInput, diagnosis: DiagnosisProfile): AiOsArtifact {
   const primaryClient = diagnosis.recommendedClients[0]?.name ?? "Codex + GPT-5 系列";
   const secondaryClient = diagnosis.recommendedClients[1]?.name ?? "Claude Code";
@@ -1232,6 +1305,7 @@ export function buildAiOsArtifact(input: IntakeInput, diagnosis: DiagnosisProfil
     sourceMap,
   });
   const draftPromptPack = buildDraftPromptPack(draftContextBundle);
+  const draftSample = buildDraftSample(draftContextBundle);
 
   const clientProfiles = [
     {
@@ -1303,6 +1377,14 @@ export function buildAiOsArtifact(input: IntakeInput, diagnosis: DiagnosisProfil
     {
       path: "AI-OS/contentops/mother-draft-prompt.json",
       purpose: "给下游系统直接消费的结构化母稿 prompt 包。",
+    },
+    {
+      path: "AI-OS/contentops/mother-draft-sample.md",
+      purpose: "基于当前上下文包生成的母稿干跑样例，供人工验收联动效果。",
+    },
+    {
+      path: "AI-OS/contentops/mother-draft-sample.json",
+      purpose: "给下游系统直接消费的结构化母稿样例。",
     },
     {
       path: "AI-OS/rules.md",
@@ -1625,6 +1707,31 @@ ${draftPromptPack.usageNotes.map((item) => `- ${item}`).join("\n")}
 
 ## Mapping Notes
 ${draftPromptPack.mappingNotes
+  .map((item) => `### ${item.targetField}\n- Derived From: ${item.derivedFrom.join(", ")}\n- Rationale: ${item.rationale}`)
+  .join("\n\n")}
+`;
+
+  const motherDraftSampleContent = `# Mother Draft Sample
+
+## Sample Version
+${draftSample.sampleVersion}
+
+## Title
+${draftSample.title}
+
+## Intro
+${draftSample.intro}
+
+## Sections
+${draftSample.sections
+  .map((section) => `### ${section.heading}\n${section.points.map((point) => `- ${point}`).join("\n")}`)
+  .join("\n\n")}
+
+## Missing Evidence
+${draftSample.missingEvidence.map((item) => `- ${item}`).join("\n")}
+
+## Mapping Notes
+${draftSample.mappingNotes
   .map((item) => `### ${item.targetField}\n- Derived From: ${item.derivedFrom.join(", ")}\n- Rationale: ${item.rationale}`)
   .join("\n\n")}
 `;
@@ -2159,6 +2266,16 @@ Instructions:
       content: `${JSON.stringify(draftPromptPack, null, 2)}\n`,
     },
     {
+      path: "AI-OS/contentops/mother-draft-sample.md",
+      purpose: "基于当前上下文包生成的母稿干跑样例，供人工验收联动效果。",
+      content: motherDraftSampleContent,
+    },
+    {
+      path: "AI-OS/contentops/mother-draft-sample.json",
+      purpose: "给下游系统直接消费的结构化母稿样例。",
+      content: `${JSON.stringify(draftSample, null, 2)}\n`,
+    },
+    {
       path: "AI-OS/rules.md",
       purpose: "记录统一规则、权限等级、验证要求和禁止事项。",
       content: rulesContent,
@@ -2299,6 +2416,7 @@ Instructions:
     sourceMap,
     draftContextBundle,
     draftPromptPack,
+    draftSample,
     operatingRules,
     clientProfiles,
     starterFiles,
