@@ -98,6 +98,10 @@
 - [ai-os.png](/Users/john/Desktop/AI/Solutions/ai-collab-foundation/docs/linear/evidence/joh-193/ai-os.png)
 - [setup-check.png](/Users/john/Desktop/AI/Solutions/ai-collab-foundation/docs/linear/evidence/joh-193/setup-check.png)
 
+### ContentOps 消费链路干跑证明
+
+- [contentops-consumption-dry-run.md](/Users/john/Desktop/AI/Solutions/ai-collab-foundation/docs/linear/evidence/joh-193/contentops-consumption-dry-run.md)
+
 ### 关键联动逻辑
 
 当前实现已经把：
@@ -115,6 +119,12 @@
    - 用于直接把这套上下文转成可执行的母稿生成提示
 3. `mother-draft-sample.*`
    - 用于干跑检查母稿结构是否合理，以及哪些真实证据仍待补充
+
+这意味着当前不只是“有上下文文件”，而是已经能证明一条：
+
+`profile -> boundaries -> style-card -> source-map -> draft-context -> mother-draft-prompt -> mother-draft-sample`
+
+的可审计消费链。
 
 ### 用户侧验收入口
 

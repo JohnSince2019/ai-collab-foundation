@@ -42,6 +42,7 @@
 - 2026-06-28 复核结果：已再次重跑 `build -> typecheck -> test:e2e`，结果仍全部通过
 - 输出路径：`/lib/diagnosis.ts` `/app/ai-os/page.tsx` `/tests/e2e/smoke.spec.ts`
 - 截图 / 视频 / 日志摘要：`AI-OS` 页面新增 `Draft Context Bundle`、`Draft Context 字段说明`、`Mother Draft Prompt`、`Prompt 字段说明`、`Mother Draft Sample` 和 `Sample 字段说明` 模块；导出结果新增 `AI-OS/contentops/draft-context.md`、`AI-OS/contentops/draft-context.json`、`AI-OS/contentops/mother-draft-prompt.md`、`AI-OS/contentops/mother-draft-prompt.json`、`AI-OS/contentops/mother-draft-sample.md` 和 `AI-OS/contentops/mother-draft-sample.json`，把 Profile / Boundaries / Style Card / Source Map 收束成母稿生成前的联动上下文包，并进一步落成可直接用于生成母稿的 prompt 包与干跑样例；`setup-check` 页面已新增 `ContentOps 联动产物检查` 区块，可显式核对 `profile -> boundaries -> style-card -> source-map -> draft-context -> mother-draft-prompt -> mother-draft-sample` 的导出与验收顺序
+- 补充证据：`docs/linear/evidence/joh-193/contentops-consumption-dry-run.md` 已把 `profile -> boundaries -> style-card -> source-map -> draft-context -> mother-draft-prompt -> mother-draft-sample` 的消费顺序、每一步输入输出、当前可证明范围与仍缺的真实业务证据写清楚
 - 当前状态：技术实现与自动化回归已完成，待 John 对跨产品联动与内容效果做最终 `passed`
 - John 最终 `passed` 前最小检查项：
   1. `draft-context` 是否足以代表 ContentOps 在母稿前真正需要的上游上下文
