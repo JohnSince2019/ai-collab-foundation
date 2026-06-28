@@ -4,9 +4,9 @@
 
 ## 1. 当前阶段
 
-- 项目状态：`M4 in progress`
+- 项目状态：`M4 complete`
 - 当前 milestone：`M4 · ContentOps 联动`
-- 当前目标：等待 `JOH-193` 的最终联动验收；技术实现与自动化验证已完成
+- 当前目标：`M4` 已全部完成，等待 John 决定是否进入 `M5`
 
 ## 1.1 Linear 真实项目结构
 
@@ -86,7 +86,7 @@ Linear 项目：`AI Collab Foundation`
 - `JOH-190` `M4-02 · 内容边界读取与规则注入` -> `Done`
 - `JOH-191` `M4-03 · 表达风格读取与风格卡生成` -> `Done`
 - `JOH-192` `M4-04 · 高频素材来源读取与结构化映射` -> `Done`
-- `JOH-193` `M4-05 · 母稿生成上下文注入与联动验收` -> `In Progress (awaiting John passed)`
+- `JOH-193` `M4-05 · 母稿生成上下文注入与联动验收` -> `Done`
 - `JOH-194` `M5-01 · 产品级上下文 API 定义` -> `Todo`
 - `JOH-195` `M5-02 · SyncTarget 管理模型` -> `Todo`
 - `JOH-196` `M5-03 · LLM Gateway 路由准备` -> `Todo`
@@ -99,8 +99,8 @@ Linear 项目：`AI Collab Foundation`
 ## 4. 当前结论
 
 - M0、M1、M2、M3 已按串行规则执行完成
-- 当前下一执行项为 `JOH-193` 的最终联动验收
-- M4 的执行顺序为：用户定位 -> 内容边界 -> 表达风格 -> 素材来源 -> 母稿注入与联动验收
+- M4 已全部完成
+- 当前不会自动进入 `M5`
 
 ## 5. 启动前检查
 
@@ -120,11 +120,7 @@ Linear 项目：`AI Collab Foundation`
 
 ## 6. 下一步建议
 
-下一步重点是继续按 M4 顺序推进：
+下一步重点不是自动进入开发，而是等待 John 决定：
 
-1. 由 John 对 `JOH-193` 给出最终 `passed`
-2. 在收到 `passed` 前，保持 `JOH-193` 为 `In Progress`
-3. John 最终只需确认 `draft-context`、`mother-draft-prompt`、`mother-draft-sample` 三项是否达到业务联动预期
-4. 若接受“联动链路已形成且干跑结果方向正确”的验收口径，则 `JOH-193` 已具备判定 `passed` 的证据条件
-5. 若收到 `passed`，按 [joh-193-closeout-playbook.md](/Users/john/Desktop/AI/Solutions/ai-collab-foundation/docs/linear/joh-193-closeout-playbook.md) 执行收口
-6. `JOH-193` 验收完成后，M4 全部 issue 才可统一收口并等待是否进入 M5
+1. 是否进入 `M5`
+2. 若进入，再按串行规则从 `JOH-194` 开始

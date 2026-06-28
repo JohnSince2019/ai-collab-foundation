@@ -5,7 +5,7 @@
 对应 issue：
 
 - `JOH-193` `M4-05 · 母稿生成上下文注入与联动验收`
-- Linear 当前状态：`In Progress`
+- Linear 当前状态：`Done`
 
 ## 1. 本次要验什么
 
@@ -44,14 +44,12 @@
 - `npm run build` / `npm run typecheck` / `npm run test:e2e` 已通过
 - 2026-06-28 晚些时候已再次按 `build -> typecheck -> test:e2e` 复跑，结果仍全部通过
 
-当前唯一未跨过的门：
+John 已对“跨产品联动与内容效果”给出最终 `passed`。
 
-- 这张 issue 仍需要 John 对“跨产品联动与内容效果”给出最终 `passed`
-
-因此当前建议状态是：
+因此当前最终状态是：
 
 - 技术实现：`passed`
-- 最终联动验收：`awaiting John passed`
+- 最终联动验收：`passed`
 
 ## 3. 关键证据
 
@@ -171,12 +169,7 @@
 
 ## 5. 当前还缺什么
 
-当前唯一缺口不是实现，也不是自动化，而是：
-
-- John 是否认可这套联动结果已经足以代表“ContentOps 真正能消费该上下文”
-- John 是否认可这套母稿上下文与 prompt 包已经达到目标中的“联动验收完成”
-
-也就是说，这不是代码 blocker，而是最终业务验收门。
+此前的最终业务验收门现已跨过，`JOH-193` 不再存在未完成缺口。
 
 ## 5.1 John 最终 passed 只需要看什么
 
@@ -212,11 +205,9 @@
 
 ## 6. 下一步唯一允许动作
 
-当前按既定规则，下一步只能是：
+当前按既定规则，下一步是：
 
-1. John 给出 `passed` 或要求补充
-2. 若 `passed`：
-   - 按 [joh-193-closeout-playbook.md](/Users/john/Desktop/AI/Solutions/ai-collab-foundation/docs/linear/joh-193-closeout-playbook.md) 执行收口
-   - 将 `JOH-193` 更新为 `Done`
-   - 将 `M4` 统一收口
-   - 再决定是否进入 `M5`
+1. 按 [joh-193-closeout-playbook.md](/Users/john/Desktop/AI/Solutions/ai-collab-foundation/docs/linear/joh-193-closeout-playbook.md) 完成收口
+2. 将 `JOH-193` 更新为 `Done`
+3. 将 `M4` 统一收口
+4. 停下并向 John 汇报 `M4` 已全部完成，不自动进入 `M5`
