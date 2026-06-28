@@ -124,11 +124,47 @@ export type ContentBoundaryProfile = {
   }>;
 };
 
+export type StyleCard = {
+  styleVersion: string;
+  source: {
+    role: string;
+    goal: string;
+    tasks: string;
+    deliveryStyle: string;
+    roleLabel: string;
+    workflowTemplates: string[];
+  };
+  voice: {
+    tone: string[];
+    sentenceRhythm: string[];
+    structureBias: string[];
+  };
+  expression: {
+    preferredOpenings: string[];
+    preferredMoves: string[];
+    avoid: string[];
+  };
+  formatting: {
+    outputShape: string[];
+    evidenceStyle: string[];
+  };
+  contentOpsUse: {
+    draftingHints: string[];
+    reviewHints: string[];
+  };
+  mappingNotes: Array<{
+    targetField: string;
+    derivedFrom: string[];
+    rationale: string;
+  }>;
+};
+
 export type AiOsArtifact = {
   workspaceName: string;
   northStar: string;
   contentOpsProfile: ContentOpsProfile;
   contentBoundaryProfile: ContentBoundaryProfile;
+  styleCard: StyleCard;
   operatingRules: string[];
   clientProfiles: Array<{
     name: string;
@@ -712,6 +748,122 @@ export function buildContentBoundaryProfile(
   };
 }
 
+export function buildStyleCard(input: IntakeInput, diagnosis: DiagnosisProfile): StyleCard {
+  const corpus = `${input.role} ${input.goal} ${input.tasks} ${diagnosis.deliveryStyle} ${diagnosis.roleLabel}`.toLowerCase();
+
+  const tone = uniqueStrings([
+    includesAny(corpus, ["内容", "写作", "创作", "脚本"]) ? "有表达感但不悬浮" : "专业、克制、直接",
+    includesAny(corpus, ["开发", "prd", "需求", "项目", "交付"]) ? "结论先行、工程导向" : "解释清楚、方便复用",
+    "避免空泛宣传感",
+  ]);
+
+  const sentenceRhythm = uniqueStrings([
+    "优先短段落，降低扫描成本",
+    "先结论，再补关键依据",
+    includesAny(corpus, ["研究", "分析", "复盘"]) ? "必要时补充结构化解释" : "默认避免过长铺垫",
+  ]);
+
+  const structureBias = uniqueStrings([
+    diagnosis.deliveryStyle,
+    "先对齐上下文，再给输出",
+    "优先给可执行块，而不是纯抽象描述",
+  ]);
+
+  const preferredOpenings = uniqueStrings([
+    includesAny(corpus, ["开发", "产品", "项目"]) ? "先说明目标、当前状态和下一步" : "先说明主题和核心判断",
+    "先抛清楚结论，再展开理由",
+  ]);
+
+  const preferredMoves = uniqueStrings([
+    "把复杂问题拆成清楚的小块",
+    "用明确边界代替模糊建议",
+    "把可复用经验整理成规则、模板或清单",
+  ]);
+
+  const avoid = uniqueStrings([
+    "避免空泛口号式表达",
+    "避免脱离上下文的宏大总结",
+    "避免未经验证就给出过度自信的判断",
+    includesAny(corpus, ["内容", "写作", "创作"]) ? "避免风格跑偏、用力过猛或堆砌修辞" : "避免只有态度没有执行细节",
+  ]);
+
+  const outputShape = uniqueStrings([
+    "优先标题 + 短段落 + 必要时列表",
+    "重要信息尽量结构化展示",
+    includesAny(corpus, ["脚本", "视频", "写作"]) ? "适合转成提纲、母稿或脚本段落" : "适合转成步骤、规则或验收清单",
+  ]);
+
+  const evidenceStyle = uniqueStrings([
+    "关键判断尽量给出依据或来源位置",
+    "涉及完成判断时要带验证结果",
+    "把事实、推断和建议分清楚",
+  ]);
+
+  const draftingHints = uniqueStrings([
+    "生成内容前先读取 Profile、Boundaries、Style Card",
+    "风格上保持专业、克制、可执行，不做营销腔泛化表达",
+    "先生成清晰结构，再补充细节与语气层次",
+  ]);
+
+  const reviewHints = uniqueStrings([
+    "检查是否与用户定位、边界和目标受众一致",
+    "检查是否出现风格跑偏、空泛堆砌或未经验证的断言",
+    "检查是否保留了可复用、可落地的结构感",
+  ]);
+
+  return {
+    styleVersion: "v0.1.0",
+    source: {
+      role: input.role,
+      goal: input.goal,
+      tasks: input.tasks,
+      deliveryStyle: diagnosis.deliveryStyle,
+      roleLabel: diagnosis.roleLabel,
+      workflowTemplates: [...diagnosis.workflowTemplates],
+    },
+    voice: {
+      tone,
+      sentenceRhythm,
+      structureBias,
+    },
+    expression: {
+      preferredOpenings,
+      preferredMoves,
+      avoid,
+    },
+    formatting: {
+      outputShape,
+      evidenceStyle,
+    },
+    contentOpsUse: {
+      draftingHints,
+      reviewHints,
+    },
+    mappingNotes: [
+      {
+        targetField: "voice.*",
+        derivedFrom: ["deliveryStyle", "roleLabel", "tasks"],
+        rationale: "用角色语义、任务类型和默认交付方式推断基础语气与表达节奏。",
+      },
+      {
+        targetField: "expression.*",
+        derivedFrom: ["goal", "tasks", "deliveryStyle"],
+        rationale: "把“怎么开头、怎么展开、该避免什么”显式化，方便下游生成时稳定复用。",
+      },
+      {
+        targetField: "formatting.*",
+        derivedFrom: ["workflowTemplates", "deliveryStyle"],
+        rationale: "让风格卡不仅描述语气，还能直接约束输出形态和证据表达方式。",
+      },
+      {
+        targetField: "contentOpsUse.*",
+        derivedFrom: ["contentops profile", "boundaries", "deliveryStyle"],
+        rationale: "把风格卡落到 ContentOps 生成与审核动作上，而不是停留在抽象偏好。",
+      },
+    ],
+  };
+}
+
 export function buildAiOsArtifact(input: IntakeInput, diagnosis: DiagnosisProfile): AiOsArtifact {
   const primaryClient = diagnosis.recommendedClients[0]?.name ?? "Codex + GPT-5 系列";
   const secondaryClient = diagnosis.recommendedClients[1]?.name ?? "Claude Code";
@@ -734,6 +886,7 @@ export function buildAiOsArtifact(input: IntakeInput, diagnosis: DiagnosisProfil
   operatingRules.push(`权限起点：${diagnosis.permissionPlan.startMode.label}。${diagnosis.permissionPlan.startMode.summary}`);
   const contentOpsProfile = buildContentOpsProfile(input, diagnosis);
   const contentBoundaryProfile = buildContentBoundaryProfile(input, diagnosis, operatingRules);
+  const styleCard = buildStyleCard(input, diagnosis);
 
   const clientProfiles = [
     {
@@ -773,6 +926,14 @@ export function buildAiOsArtifact(input: IntakeInput, diagnosis: DiagnosisProfil
     {
       path: "AI-OS/contentops/boundaries.json",
       purpose: "给 ContentOps 或其他下游系统直接消费的结构化内容边界数据。",
+    },
+    {
+      path: "AI-OS/contentops/style-card.md",
+      purpose: "给 ContentOps 读取的结构化表达风格卡。",
+    },
+    {
+      path: "AI-OS/contentops/style-card.json",
+      purpose: "给 ContentOps 或其他下游系统直接消费的结构化风格卡数据。",
     },
     {
       path: "AI-OS/rules.md",
@@ -994,6 +1155,35 @@ ${contentBoundaryProfile.injectionTargets.map((item) => `- ${item.target}: ${ite
 
 ## Mapping Notes
 ${contentBoundaryProfile.mappingNotes
+  .map((item) => `### ${item.targetField}\n- Derived From: ${item.derivedFrom.join(", ")}\n- Rationale: ${item.rationale}`)
+  .join("\n\n")}
+`;
+
+  const styleCardContent = `# Style Card
+
+## Style Version
+${styleCard.styleVersion}
+
+## Voice
+${styleCard.voice.tone.map((item) => `- Tone: ${item}`).join("\n")}
+${styleCard.voice.sentenceRhythm.map((item) => `- Rhythm: ${item}`).join("\n")}
+${styleCard.voice.structureBias.map((item) => `- Structure Bias: ${item}`).join("\n")}
+
+## Expression
+${styleCard.expression.preferredOpenings.map((item) => `- Preferred Opening: ${item}`).join("\n")}
+${styleCard.expression.preferredMoves.map((item) => `- Preferred Move: ${item}`).join("\n")}
+${styleCard.expression.avoid.map((item) => `- Avoid: ${item}`).join("\n")}
+
+## Formatting
+${styleCard.formatting.outputShape.map((item) => `- Output Shape: ${item}`).join("\n")}
+${styleCard.formatting.evidenceStyle.map((item) => `- Evidence Style: ${item}`).join("\n")}
+
+## ContentOps Use
+${styleCard.contentOpsUse.draftingHints.map((item) => `- Drafting Hint: ${item}`).join("\n")}
+${styleCard.contentOpsUse.reviewHints.map((item) => `- Review Hint: ${item}`).join("\n")}
+
+## Mapping Notes
+${styleCard.mappingNotes
   .map((item) => `### ${item.targetField}\n- Derived From: ${item.derivedFrom.join(", ")}\n- Rationale: ${item.rationale}`)
   .join("\n\n")}
 `;
@@ -1488,6 +1678,16 @@ Instructions:
       content: `${JSON.stringify(contentBoundaryProfile, null, 2)}\n`,
     },
     {
+      path: "AI-OS/contentops/style-card.md",
+      purpose: "给 ContentOps 读取的结构化表达风格卡。",
+      content: styleCardContent,
+    },
+    {
+      path: "AI-OS/contentops/style-card.json",
+      purpose: "给 ContentOps 或其他下游系统直接消费的结构化风格卡数据。",
+      content: `${JSON.stringify(styleCard, null, 2)}\n`,
+    },
+    {
       path: "AI-OS/rules.md",
       purpose: "记录统一规则、权限等级、验证要求和禁止事项。",
       content: rulesContent,
@@ -1624,6 +1824,7 @@ Instructions:
     northStar: `让 AI 按统一规则稳定协作，围绕“${input.goal || "高质量完成关键任务"}”持续复利。`,
     contentOpsProfile,
     contentBoundaryProfile,
+    styleCard,
     operatingRules,
     clientProfiles,
     starterFiles,
