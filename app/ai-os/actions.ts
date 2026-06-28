@@ -9,6 +9,7 @@ import { buildRuleScanContent, detectExistingRules } from "@/lib/rule-scanner";
 import { buildDiffPlan, buildDiffPlanContent } from "@/lib/diff-planner";
 import { buildRiskGuardContent, detectRiskGuard } from "@/lib/risk-guard";
 import { buildMcpHealthContent, detectMcpHealth } from "@/lib/mcp-health";
+import { applySelectedRuleCandidates, buildRetrospectiveDraft, buildRuleCandidates } from "@/lib/retrospective";
 
 function sanitizeSegment(input: string) {
   const normalized = input
@@ -51,6 +52,11 @@ export async function exportAiOsAction(formData: FormData) {
 
   const diagnosis = buildDiagnosis(intake);
   const artifact = buildAiOsArtifact(intake, diagnosis);
+  const retrospective = buildRetrospectiveDraft(intake, diagnosis, artifact);
+  const ruleCandidates = buildRuleCandidates(intake, diagnosis, artifact, retrospective);
+  const selectedCandidateIds = formData.getAll("selectedCandidate").map(String);
+  const selectedCandidates = ruleCandidates.candidates.filter((item) => selectedCandidateIds.includes(item.id));
+  const savedCandidateResult = applySelectedRuleCandidates(artifact, selectedCandidates);
   const environmentCheck = await detectEnvironment(intake);
   const ruleScan = await detectExistingRules(artifact);
   const diffPlan = await buildDiffPlan(artifact, ruleScan);
@@ -61,20 +67,39 @@ export async function exportAiOsAction(formData: FormData) {
   for (const file of artifact.fileContents) {
     const targetPath = path.join(process.cwd(), "generated-ai-os", sanitizeSegment(artifact.workspaceName), file.path);
     await mkdir(path.dirname(targetPath), { recursive: true });
-    const content =
-      file.path === "AI-OS/install/environment-check.md"
-        ? buildEnvironmentCheckContent(environmentCheck)
-        : file.path === "AI-OS/install/existing-rules-scan.md"
-          ? buildRuleScanContent(ruleScan)
-          : file.path === "AI-OS/install/diff-merge-plan.md"
-            ? buildDiffPlanContent(diffPlan)
-            : file.path === "AI-OS/install/sensitive-risk-guard.md"
-              ? buildRiskGuardContent(riskGuard)
-              : file.path === "AI-OS/install/mcp-health.md"
-                ? buildMcpHealthContent(mcpHealth)
-          : file.content;
+    let content = file.content;
+
+    if (file.path === "AI-OS/rules.md") {
+      content = savedCandidateResult.rulesContent;
+    } else if (file.path === "AI-OS/workflows.md") {
+      content = savedCandidateResult.workflowsContent;
+    } else if (file.path === "AI-OS/memory/decisions.md") {
+      content = savedCandidateResult.decisionsContent;
+    } else if (file.path === "AI-OS/memory/rule-versions.md") {
+      content = savedCandidateResult.versionLogContent;
+    } else if (file.path === "AI-OS/install/environment-check.md") {
+      content = buildEnvironmentCheckContent(environmentCheck);
+    } else if (file.path === "AI-OS/install/existing-rules-scan.md") {
+      content = buildRuleScanContent(ruleScan);
+    } else if (file.path === "AI-OS/install/diff-merge-plan.md") {
+      content = buildDiffPlanContent(diffPlan);
+    } else if (file.path === "AI-OS/install/sensitive-risk-guard.md") {
+      content = buildRiskGuardContent(riskGuard);
+    } else if (file.path === "AI-OS/install/mcp-health.md") {
+      content = buildMcpHealthContent(mcpHealth);
+    }
+
     await writeFile(targetPath, content, "utf8");
   }
 
-  redirect(`/ai-os?${buildQuery(intake, { exported: "1", exportPath: exportRoot })}`);
+  redirect(
+    `/ai-os?${buildQuery(intake, {
+      exported: "1",
+      exportPath: exportRoot,
+      savedCandidates: selectedCandidates.map((item) => item.title).join(" | "),
+      savedVersion: savedCandidateResult.versionSummary.version,
+      savedAt: savedCandidateResult.versionSummary.savedAt,
+      changeSummary: savedCandidateResult.versionSummary.changeSummary.join(" | "),
+    })}`,
+  );
 }

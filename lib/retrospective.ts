@@ -28,6 +28,24 @@ export type RuleCandidateResult = {
   candidates: RuleCandidate[];
 };
 
+export type SaveRuleResult = {
+  rulesContent: string;
+  workflowsContent: string;
+  decisionsContent: string;
+  versionLogContent: string;
+  versionSummary: {
+    version: string;
+    savedAt: string;
+    changeSummary: string[];
+  };
+  savedTargets: Array<{
+    candidateId: string;
+    title: string;
+    category: RuleCandidate["category"];
+    targetPath: string;
+  }>;
+};
+
 function sentence(input: string, fallback: string) {
   const trimmed = input.trim();
   return trimmed.length > 0 ? trimmed : fallback;
@@ -125,5 +143,71 @@ export function buildRuleCandidates(
   return {
     summary: "以下是系统基于当前复盘结构自动整理出的首版候选规则。现在先展示分类与原因，下一步再进入逐条确认保存。",
     candidates,
+  };
+}
+
+function appendSection(content: string, sectionTitle: string, lines: string[]) {
+  if (lines.length === 0) {
+    return content;
+  }
+
+  return `${content}\n\n## ${sectionTitle}\n${lines.map((line) => `- ${line}`).join("\n")}\n`;
+}
+
+export function applySelectedRuleCandidates(
+  artifact: AiOsArtifact,
+  selectedCandidates: RuleCandidate[],
+): SaveRuleResult {
+  const rulesFile = artifact.fileContents.find((item) => item.path === "AI-OS/rules.md");
+  const workflowsFile = artifact.fileContents.find((item) => item.path === "AI-OS/workflows.md");
+  const decisionsFile = artifact.fileContents.find((item) => item.path === "AI-OS/memory/decisions.md");
+
+  const versionLogFile = artifact.fileContents.find((item) => item.path === "AI-OS/memory/rule-versions.md");
+  let rulesContent = rulesFile?.content ?? "# Rules\n";
+  let workflowsContent = workflowsFile?.content ?? "# Workflows\n";
+  let decisionsContent = decisionsFile?.content ?? "# Decisions Memory\n";
+  let versionLogContent = versionLogFile?.content ?? "# Rule Versions\n";
+
+  const ruleLines = selectedCandidates.filter((item) => item.category === "rules").map((item) => `${item.title}：${item.content}`);
+  const workflowLines = selectedCandidates.filter((item) => item.category === "workflows").map((item) => `${item.title}：${item.content}`);
+  const decisionLines = selectedCandidates.filter((item) => item.category === "decisions").map((item) => `${item.title}：${item.content}`);
+
+  rulesContent = appendSection(rulesContent, "Confirmed Candidate Rules", ruleLines);
+  workflowsContent = appendSection(workflowsContent, "Confirmed Candidate Workflow Steps", workflowLines);
+  decisionsContent = appendSection(decisionsContent, "Confirmed Candidate Decisions", decisionLines);
+
+  const savedTargets = selectedCandidates.map((item) => ({
+    candidateId: item.id,
+    title: item.title,
+    category: item.category,
+    targetPath:
+      item.category === "rules"
+        ? "AI-OS/rules.md"
+        : item.category === "workflows"
+          ? "AI-OS/workflows.md"
+          : "AI-OS/memory/decisions.md",
+  }));
+
+  const version = `v${savedTargets.length === 0 ? "0.0" : "0.1"}.${savedTargets.length}`;
+  const savedAt = new Date().toISOString();
+  const changeSummary = savedTargets.length > 0
+    ? savedTargets.map((item) => `${item.title} -> ${item.targetPath}`)
+    : ["No candidate selected; base AI-OS exported without additional rule writeback."];
+
+  versionLogContent = `${versionLogContent}\n\n## ${version}\n- Saved at: ${savedAt}\n${changeSummary
+    .map((item) => `- ${item}`)
+    .join("\n")}\n`;
+
+  return {
+    rulesContent,
+    workflowsContent,
+    decisionsContent,
+    versionLogContent,
+    versionSummary: {
+      version,
+      savedAt,
+      changeSummary,
+    },
+    savedTargets,
   };
 }

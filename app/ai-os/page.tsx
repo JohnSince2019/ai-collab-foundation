@@ -70,6 +70,16 @@ export default async function AiOsPage({
   const query = buildQuery(intake);
   const exported = getFirst(params.exported) === "1";
   const exportPath = getFirst(params.exportPath);
+  const savedCandidates = getFirst(params.savedCandidates)
+    .split(" | ")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  const savedVersion = getFirst(params.savedVersion);
+  const savedAt = getFirst(params.savedAt);
+  const changeSummary = getFirst(params.changeSummary)
+    .split(" | ")
+    .map((item) => item.trim())
+    .filter(Boolean);
 
   return (
     <Shell className="pb-12">
@@ -83,6 +93,35 @@ export default async function AiOsPage({
               {" "}
               <span className="font-medium text-slate-900">{exportPath}</span>
             </div>
+            {savedCandidates.length > 0 ? (
+              <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
+                本次已确认保存：
+                {" "}
+                <span className="font-medium text-slate-900">{savedCandidates.join("、")}</span>
+              </div>
+            ) : (
+              <div className="mt-3 rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-4 text-sm leading-6 text-slate-500">
+                本次未勾选任何候选规则，系统只写出了基础 AI-OS 骨架，没有追加共享规则内容。
+              </div>
+            )}
+            {savedVersion ? (
+              <div className="mt-3 rounded-2xl border border-slate-200 bg-white px-4 py-4">
+                <div className="text-sm font-semibold text-slate-900">规则轻量版本记录</div>
+                <div className="mt-2 text-sm leading-6 text-slate-600">
+                  当前版本：
+                  {" "}
+                  <span className="font-medium text-slate-900">{savedVersion}</span>
+                </div>
+                <div className="text-sm leading-6 text-slate-500">保存时间：{savedAt}</div>
+                <div className="mt-2 space-y-1">
+                  {changeSummary.map((item) => (
+                    <div key={item} className="text-sm leading-6 text-slate-500">
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </Card>
         ) : null}
 
@@ -251,11 +290,43 @@ export default async function AiOsPage({
           <div className="mt-4 rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
             {ruleCandidates.summary}
           </div>
-          <div className="mt-4 space-y-3">
+          <form action={exportAiOsAction} className="mt-4 space-y-4">
+            <input type="hidden" name="role" value={intake.role} />
+            <input type="hidden" name="goal" value={intake.goal} />
+            <input type="hidden" name="clients" value={intake.clients} />
+            <input type="hidden" name="tokenStatus" value={intake.tokenStatus} />
+            {intake.mcpSelections.map((item) => (
+              <input key={item} type="hidden" name="mcpSelection" value={item} />
+            ))}
+            <input type="hidden" name="tasks" value={intake.tasks} />
+            <input type="hidden" name="concerns" value={intake.concerns} />
+
             {ruleCandidates.candidates.map((item) => (
-              <div key={item.id} className="rounded-[24px] border border-slate-200 bg-white px-4 py-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="text-sm font-semibold text-slate-900">{item.title}</div>
+              <label key={item.id} className="block rounded-[24px] border border-slate-200 bg-white px-4 py-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      name="selectedCandidate"
+                      value={item.id}
+                      defaultChecked
+                      className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-950 focus:ring-slate-300"
+                    />
+                    <div>
+                      <div className="text-sm font-semibold text-slate-900">{item.title}</div>
+                      <div className="mt-1 text-sm leading-6 text-slate-600">
+                        将写入：
+                        {" "}
+                        <span className="font-medium text-slate-900">
+                          {item.category === "rules"
+                            ? "AI-OS/rules.md"
+                            : item.category === "workflows"
+                              ? "AI-OS/workflows.md"
+                              : "AI-OS/memory/decisions.md"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                   <Pill>{item.category}</Pill>
                 </div>
                 <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-700">
@@ -263,9 +334,19 @@ export default async function AiOsPage({
                 </div>
                 <div className="mt-3 text-sm leading-6 text-slate-600">{item.rationale}</div>
                 <div className="mt-1 text-sm leading-6 text-slate-500">{item.source}</div>
-              </div>
+              </label>
             ))}
-          </div>
+
+            <div className="rounded-[24px] border border-dashed border-slate-300 bg-white px-4 py-4">
+              <div className="text-sm font-semibold text-slate-900">确认保存规则</div>
+              <div className="mt-1 text-sm leading-6 text-slate-500">
+                只有你勾选的候选会写回共享规则文件；未勾选项不会被自动写入。
+              </div>
+              <div className="mt-4">
+                <ExportAiOsButton />
+              </div>
+            </div>
+          </form>
         </Card>
 
         <Card className="px-6 py-6 md:px-8">
@@ -441,7 +522,9 @@ export default async function AiOsPage({
                   <div className="mt-1 text-sm text-slate-500">{item.purpose}</div>
                 </div>
                 <pre className="overflow-x-auto px-4 py-4 text-xs leading-6 text-slate-700 whitespace-pre-wrap">
-                  {item.path === "AI-OS/install/environment-check.md"
+                  {item.path === "AI-OS/memory/rule-versions.md" && savedVersion
+                    ? `# Rule Versions\n\n## ${savedVersion}\n- Saved at: ${savedAt}\n${changeSummary.map((entry) => `- ${entry}`).join("\n")}`
+                    : item.path === "AI-OS/install/environment-check.md"
                     ? environmentCheckContent
                     : item.path === "AI-OS/install/existing-rules-scan.md"
                       ? ruleScanContent
@@ -467,18 +550,6 @@ export default async function AiOsPage({
               </div>
             </div>
             <div className="flex flex-wrap gap-3">
-              <form action={exportAiOsAction}>
-                <input type="hidden" name="role" value={intake.role} />
-                <input type="hidden" name="goal" value={intake.goal} />
-                <input type="hidden" name="clients" value={intake.clients} />
-                <input type="hidden" name="tokenStatus" value={intake.tokenStatus} />
-                {intake.mcpSelections.map((item) => (
-                  <input key={item} type="hidden" name="mcpSelection" value={item} />
-                ))}
-                <input type="hidden" name="tasks" value={intake.tasks} />
-                <input type="hidden" name="concerns" value={intake.concerns} />
-                <ExportAiOsButton />
-              </form>
               <Link
                 href={`/configure?${query}`}
                 className="inline-flex items-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700"

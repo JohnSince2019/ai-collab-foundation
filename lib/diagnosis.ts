@@ -1101,6 +1101,11 @@ Instructions:
       content: decisionsContent,
     },
     {
+      path: "AI-OS/memory/rule-versions.md",
+      purpose: "记录每次规则写回的轻量版本号、时间和变更摘要。",
+      content: "# Rule Versions\n\n## v0.0.0\n- Saved at: not yet generated\n- No confirmed candidate writeback yet.\n",
+    },
+    {
       path: "AI-OS/install/adapter-setup.md",
       purpose: "说明如何把这套 AI-OS 与不同客户端接起来。",
       content: installGuideContent,

@@ -70,6 +70,11 @@ test("home and key flows render", async ({ page }) => {
   await expect(page.getByText("把验证前置为共享边界")).toBeVisible();
   await expect(page.getByText("把任务后复盘固定进默认流程")).toBeVisible();
   await expect(page.getByText("记录本轮客户端与权限选择")).toBeVisible();
+  await expect(page.getByRole("checkbox", { name: /把验证前置为共享边界/ })).toBeChecked();
+  await expect(page.getByRole("checkbox", { name: /把任务后复盘固定进默认流程/ })).toBeChecked();
+  await expect(page.getByRole("checkbox", { name: /记录本轮客户端与权限选择/ })).toBeChecked();
+  await expect(page.getByText("确认保存规则", { exact: true })).toBeVisible();
+  await expect(page.getByText("只有你勾选的候选会写回共享规则文件")).toBeVisible();
   await expect(page.getByText("rules").first()).toBeVisible();
   await expect(page.getByText("workflows").first()).toBeVisible();
   await expect(page.getByText("decisions").first()).toBeVisible();
@@ -100,6 +105,11 @@ test("home and key flows render", async ({ page }) => {
   await expect(page.getByText("# Rules")).toBeVisible();
   await page.getByRole("button", { name: "写出 AI-OS 文件" }).click();
   await expect(page.getByText("AI-OS 已写出到本地目录")).toBeVisible();
+  await expect(page.getByText("本次已确认保存：")).toBeVisible();
+  await expect(page.getByText("规则轻量版本记录", { exact: true })).toBeVisible();
+  await expect(page.getByText(/当前版本：/)).toBeVisible();
+  await expect(page.getByText(/保存时间：/)).toBeVisible();
+  await expect(page.getByText(/把验证前置为共享边界/).last()).toBeVisible();
   await expect(page.getByText(/generated-ai-os/)).toBeVisible();
   await page.goto(`/setup-check?role=${encodeURIComponent("独立开发者")}&goal=${encodeURIComponent("建立统一 AI 协作底座")}&clients=${encodeURIComponent("Codex、Cursor、ChatGPT")}&tokenStatus=${encodeURIComponent("need-token")}&tasks=${encodeURIComponent("写 PRD、拆需求、改代码、复盘")}&concerns=${encodeURIComponent("乱改文件、上下文不一致、做完没验证")}&mcpSelection=${encodeURIComponent("Linear")}&mcpSelection=${encodeURIComponent("Knowledge Index")}`);
   await expect(page.getByText("接入之后，应该如何确认这套底座真的生效了。")).toBeVisible();
