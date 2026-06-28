@@ -213,6 +213,18 @@ export type DraftContextBundle = {
   }>;
 };
 
+export type DraftPromptPack = {
+  promptVersion: string;
+  systemIntent: string;
+  userPrompt: string;
+  usageNotes: string[];
+  mappingNotes: Array<{
+    targetField: string;
+    derivedFrom: string[];
+    rationale: string;
+  }>;
+};
+
 export type AiOsArtifact = {
   workspaceName: string;
   northStar: string;
@@ -221,6 +233,7 @@ export type AiOsArtifact = {
   styleCard: StyleCard;
   sourceMap: SourceMap;
   draftContextBundle: DraftContextBundle;
+  draftPromptPack: DraftPromptPack;
   operatingRules: string[];
   clientProfiles: Array<{
     name: string;
@@ -1104,6 +1117,88 @@ export function buildDraftContextBundle(
   };
 }
 
+export function buildDraftPromptPack(bundle: DraftContextBundle): DraftPromptPack {
+  const systemIntent = [
+    "你正在帮助用户基于真实工作上下文生成内容母稿。",
+    "先尊重定位、边界、风格和素材来源，再进入提纲与正文。",
+    "如果来源不足或边界冲突，不要编造，先明确指出缺口。",
+  ].join(" ");
+
+  const userPrompt = `# Mother Draft Generation Prompt
+
+## Goal
+请基于以下上游上下文生成一份“内容母稿”，要求它后续可以继续派生为长文、短帖、脚本或其他平台内容。
+
+## Positioning
+${bundle.draftInputs.positioning}
+
+## Audience
+${bundle.draftInputs.audience}
+
+## Content Pillars
+${bundle.draftInputs.contentPillars.map((item) => `- ${item}`).join("\n")}
+
+## Hard Stops
+${bundle.draftInputs.hardStops.map((item) => `- ${item}`).join("\n")}
+
+## Style Tone
+${bundle.draftInputs.styleTone.map((item) => `- ${item}`).join("\n")}
+
+## Preferred Formats
+${bundle.draftInputs.preferredFormats.map((item) => `- ${item}`).join("\n")}
+
+## Pre-Draft Sources
+${bundle.draftInputs.preDraftSources.map((item) => `- ${item}`).join("\n")}
+
+## Required Flow
+${bundle.draftFlow.map((item) => `- ${item}`).join("\n")}
+
+## Review Checklist
+${bundle.reviewChecklist.map((item) => `- ${item}`).join("\n")}
+
+## Output Requirement
+请输出：
+1. 一个明确标题
+2. 一段总引子
+3. 3-5 个一级结构
+4. 每个一级结构下的关键论点
+5. 哪些地方需要补充真实素材或案例
+
+禁止：
+- 跳过边界检查
+- 编造来源
+- 用泛化营销腔代替真实判断
+`;
+
+  return {
+    promptVersion: "v0.1.0",
+    systemIntent,
+    userPrompt,
+    usageNotes: [
+      "优先与 draft-context.json 一起使用，而不是单独脱离上下文调用。",
+      "如果任务主题发生变化，应先刷新 Profile / Boundaries / Style / Source 再复用该 prompt。",
+      "生成结果出来后，仍需按 review checklist 做一轮人工或系统复核。",
+    ],
+    mappingNotes: [
+      {
+        targetField: "systemIntent",
+        derivedFrom: ["draftContextBundle.summary", "reviewChecklist"],
+        rationale: "把母稿生成的最核心约束压成系统意图，降低模型偏航概率。",
+      },
+      {
+        targetField: "userPrompt",
+        derivedFrom: ["draftInputs", "draftFlow", "reviewChecklist"],
+        rationale: "把联动上下文包转成可直接运行的母稿生成 prompt，而不是只留结构说明。",
+      },
+      {
+        targetField: "usageNotes",
+        derivedFrom: ["cross-product integration constraints"],
+        rationale: "明确这个 prompt 的使用边界，避免被误当成脱离上下文的一次性模板。",
+      },
+    ],
+  };
+}
+
 export function buildAiOsArtifact(input: IntakeInput, diagnosis: DiagnosisProfile): AiOsArtifact {
   const primaryClient = diagnosis.recommendedClients[0]?.name ?? "Codex + GPT-5 系列";
   const secondaryClient = diagnosis.recommendedClients[1]?.name ?? "Claude Code";
@@ -1136,6 +1231,7 @@ export function buildAiOsArtifact(input: IntakeInput, diagnosis: DiagnosisProfil
     styleCard,
     sourceMap,
   });
+  const draftPromptPack = buildDraftPromptPack(draftContextBundle);
 
   const clientProfiles = [
     {
@@ -1199,6 +1295,14 @@ export function buildAiOsArtifact(input: IntakeInput, diagnosis: DiagnosisProfil
     {
       path: "AI-OS/contentops/draft-context.json",
       purpose: "给 ContentOps 或其他下游系统直接消费的结构化母稿上下文包。",
+    },
+    {
+      path: "AI-OS/contentops/mother-draft-prompt.md",
+      purpose: "给 ContentOps 或 LLM 直接使用的母稿生成 prompt。",
+    },
+    {
+      path: "AI-OS/contentops/mother-draft-prompt.json",
+      purpose: "给下游系统直接消费的结构化母稿 prompt 包。",
     },
     {
       path: "AI-OS/rules.md",
@@ -1501,6 +1605,26 @@ ${draftContextBundle.reviewChecklist.map((item) => `- ${item}`).join("\n")}
 
 ## Mapping Notes
 ${draftContextBundle.mappingNotes
+  .map((item) => `### ${item.targetField}\n- Derived From: ${item.derivedFrom.join(", ")}\n- Rationale: ${item.rationale}`)
+  .join("\n\n")}
+`;
+
+  const motherDraftPromptContent = `# Mother Draft Prompt Pack
+
+## Prompt Version
+${draftPromptPack.promptVersion}
+
+## System Intent
+${draftPromptPack.systemIntent}
+
+## User Prompt
+${draftPromptPack.userPrompt}
+
+## Usage Notes
+${draftPromptPack.usageNotes.map((item) => `- ${item}`).join("\n")}
+
+## Mapping Notes
+${draftPromptPack.mappingNotes
   .map((item) => `### ${item.targetField}\n- Derived From: ${item.derivedFrom.join(", ")}\n- Rationale: ${item.rationale}`)
   .join("\n\n")}
 `;
@@ -2025,6 +2149,16 @@ Instructions:
       content: `${JSON.stringify(draftContextBundle, null, 2)}\n`,
     },
     {
+      path: "AI-OS/contentops/mother-draft-prompt.md",
+      purpose: "给 ContentOps 或 LLM 直接使用的母稿生成 prompt。",
+      content: motherDraftPromptContent,
+    },
+    {
+      path: "AI-OS/contentops/mother-draft-prompt.json",
+      purpose: "给下游系统直接消费的结构化母稿 prompt 包。",
+      content: `${JSON.stringify(draftPromptPack, null, 2)}\n`,
+    },
+    {
       path: "AI-OS/rules.md",
       purpose: "记录统一规则、权限等级、验证要求和禁止事项。",
       content: rulesContent,
@@ -2164,6 +2298,7 @@ Instructions:
     styleCard,
     sourceMap,
     draftContextBundle,
+    draftPromptPack,
     operatingRules,
     clientProfiles,
     starterFiles,

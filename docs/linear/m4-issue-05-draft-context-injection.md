@@ -40,6 +40,6 @@
 - 测试命令：`npm run build` / `npm run typecheck` / `npm run test:e2e`
 - 测试结果：passed
 - 输出路径：`/lib/diagnosis.ts` `/app/ai-os/page.tsx` `/tests/e2e/smoke.spec.ts`
-- 截图 / 视频 / 日志摘要：`AI-OS` 页面新增 `Draft Context Bundle` 与 `Draft Context 字段说明` 模块；导出结果新增 `AI-OS/contentops/draft-context.md` 和 `AI-OS/contentops/draft-context.json`，把 Profile / Boundaries / Style Card / Source Map 收束成母稿生成前的联动上下文包
+- 截图 / 视频 / 日志摘要：`AI-OS` 页面新增 `Draft Context Bundle`、`Draft Context 字段说明`、`Mother Draft Prompt` 和 `Prompt 字段说明` 模块；导出结果新增 `AI-OS/contentops/draft-context.md`、`AI-OS/contentops/draft-context.json`、`AI-OS/contentops/mother-draft-prompt.md` 和 `AI-OS/contentops/mother-draft-prompt.json`，把 Profile / Boundaries / Style Card / Source Map 收束成母稿生成前的联动上下文包，并进一步落成可直接用于生成母稿的 prompt 包
 - 当前状态：技术实现与自动化回归已完成，待 John 对跨产品联动与内容效果做最终 `passed`
 - 关联本地 docs/linear 文件：`m4-linear-seeding-pack.md` `current-execution-status.md`
