@@ -196,6 +196,12 @@ export default async function AiOsPage({
               >
                 返回配置
               </Link>
+              <Link
+                href={`/setup-check?${query}`}
+                className="inline-flex items-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700"
+              >
+                接入检查页
+              </Link>
               <Link href={`/onboarding?${query}`}>
                 <PrimaryButton>
                   重新生成

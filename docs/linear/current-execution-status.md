@@ -26,6 +26,7 @@
 - 客户端接入安装说明已纳入输出
 - 客户端目标放置位置与验证清单已纳入输出
 - `AGENTS.md / Cursor rules / Claude session` 模板已纳入输出
+- 候选最终文件与 setup-check 页面已实现
 - `npm run typecheck` 已通过
 - `npm run build` 已通过
 

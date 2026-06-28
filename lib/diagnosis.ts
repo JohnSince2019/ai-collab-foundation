@@ -222,6 +222,26 @@ export function buildAiOsArtifact(input: IntakeInput, diagnosis: DiagnosisProfil
       path: "AI-OS/templates/claude-code-session-template.md",
       purpose: "给 Claude Code 开场输入使用的首版模板。",
     },
+    {
+      path: "AI-OS/candidates/AGENTS.md",
+      purpose: "可直接作为项目根目录候选文件的 AGENTS.md。",
+    },
+    {
+      path: "AI-OS/candidates/cursor-rules.md",
+      purpose: "可直接作为 Cursor 项目规则候选文件的内容。",
+    },
+    {
+      path: "AI-OS/candidates/project-root/AGENTS.md",
+      purpose: "模拟真实项目根目录放置位点的 AGENTS.md 候选文件。",
+    },
+    {
+      path: "AI-OS/candidates/.cursor/rules/ai-collab-foundation.mdc",
+      purpose: "模拟 Cursor 规则目录放置位点的候选文件。",
+    },
+    {
+      path: "AI-OS/candidates/claude-code/session-start.md",
+      purpose: "模拟 Claude Code 会话开场输入文件的候选版本。",
+    },
   ];
 
   const identityContent = `# Identity
@@ -521,6 +541,90 @@ Focus on:
 Do not mark work complete without shared verification standards.
 `;
 
+  const agentsCandidateContent = `# AGENTS.md
+
+## Identity
+- Role: ${input.role || diagnosis.roleLabel}
+- North Star: ${input.goal || "建立统一 AI 协作系统"}
+
+## Read First
+- AI-OS/identity.md
+- AI-OS/rules.md
+- AI-OS/workflows.md
+- AI-OS/memory/decisions.md
+
+## Working Contract
+- Follow shared AI-OS rules before execution
+- Use verification, not intuition, to claim completion
+- Keep high-risk actions behind human confirmation
+- Keep new reusable learnings synchronized back to AI-OS
+`;
+
+  const cursorRulesCandidateContent = `# Cursor Rules
+
+## Scope
+- Use Cursor for IDE-level acceleration and short local edits
+- Respect AI-OS naming, boundaries, and verification rules
+
+## Must Read
+- AI-OS/identity.md
+- AI-OS/rules.md
+- AI-OS/workflows.md
+- AI-OS/clients/cursor.md
+
+## Guardrails
+- Cursor suggestions are not completion claims
+- Major implementation still routes back to shared workflow validation
+`;
+
+  const projectRootAgentsCandidateContent = `# AGENTS.md
+
+## Identity
+- Role: ${input.role || diagnosis.roleLabel}
+- North Star: ${input.goal || "建立统一 AI 协作系统"}
+
+## Read Order
+1. AI-OS/identity.md
+2. AI-OS/rules.md
+3. AI-OS/workflows.md
+4. AI-OS/memory/decisions.md
+
+## Default Execution Rules
+- Follow shared AI-OS rules before implementation
+- Prefer evidence-backed completion
+- Respect human confirmation for high-risk actions
+`;
+
+  const cursorPlacementCandidateContent = `---
+description: AI Collab Foundation Cursor Rule
+---
+
+# AI Collab Foundation Cursor Rule
+
+- Read AI-OS/identity.md before making major changes
+- Follow AI-OS/rules.md for boundaries and verification
+- Treat Cursor as a local acceleration layer, not the source of truth
+- Route major completion claims back to the shared validation workflow
+`;
+
+  const claudeSessionCandidateContent = `# Claude Code Session Start
+
+Use the following context before reasoning:
+- AI-OS/identity.md
+- AI-OS/rules.md
+- AI-OS/workflows.md
+- AI-OS/clients/claude-code.md
+
+Task context:
+- Role: ${input.role || diagnosis.roleLabel}
+- Goal: ${input.goal || "建立统一 AI 协作系统"}
+
+Instructions:
+- Explain reasoning clearly
+- Surface alternatives and risks
+- Do not claim completion without shared verification
+`;
+
   const fileContents = [
     {
       path: "AI-OS/identity.md",
@@ -591,6 +695,31 @@ Do not mark work complete without shared verification standards.
       path: "AI-OS/templates/claude-code-session-template.md",
       purpose: "给 Claude Code 开场输入使用的首版模板。",
       content: claudeCodeSessionTemplateContent,
+    },
+    {
+      path: "AI-OS/candidates/AGENTS.md",
+      purpose: "可直接作为项目根目录候选文件的 AGENTS.md。",
+      content: agentsCandidateContent,
+    },
+    {
+      path: "AI-OS/candidates/cursor-rules.md",
+      purpose: "可直接作为 Cursor 项目规则候选文件的内容。",
+      content: cursorRulesCandidateContent,
+    },
+    {
+      path: "AI-OS/candidates/project-root/AGENTS.md",
+      purpose: "模拟真实项目根目录放置位点的 AGENTS.md 候选文件。",
+      content: projectRootAgentsCandidateContent,
+    },
+    {
+      path: "AI-OS/candidates/.cursor/rules/ai-collab-foundation.mdc",
+      purpose: "模拟 Cursor 规则目录放置位点的候选文件。",
+      content: cursorPlacementCandidateContent,
+    },
+    {
+      path: "AI-OS/candidates/claude-code/session-start.md",
+      purpose: "模拟 Claude Code 会话开场输入文件的候选版本。",
+      content: claudeSessionCandidateContent,
     },
   ];
 
