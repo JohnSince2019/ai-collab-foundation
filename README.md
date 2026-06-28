@@ -29,6 +29,7 @@
 - onboarding -> diagnosis -> configuration 首版流程已打通
 - AI-OS 结构化输出页已落地
 - AI-OS 文件级内容预览已支持
+- AI-OS 首版 `.md` 文件已支持真实写出
 - 本地类型检查与生产构建已通过
 
 下一步优先级：

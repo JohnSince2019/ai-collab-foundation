@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ArrowRight, BookOpenText, FolderTree, RefreshCcw, ShieldCheck } from "lucide-react";
 import { Card, Pill, PrimaryButton, SectionTag, Shell, TopNav } from "@/components/ui";
+import { ExportAiOsButton } from "@/components/export-ai-os-button";
+import { exportAiOsAction } from "@/app/ai-os/actions";
 import { buildAiOsArtifact, buildDiagnosis, type IntakeInput } from "@/lib/diagnosis";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -35,11 +37,24 @@ export default async function AiOsPage({
   const diagnosis = buildDiagnosis(intake);
   const artifact = buildAiOsArtifact(intake, diagnosis);
   const query = buildQuery(intake);
+  const exported = getFirst(params.exported) === "1";
+  const exportPath = getFirst(params.exportPath);
 
   return (
     <Shell className="pb-12">
       <TopNav />
       <main className="mx-auto mt-8 max-w-7xl space-y-6">
+        {exported && exportPath ? (
+          <Card className="px-6 py-5 md:px-8">
+            <div className="text-sm font-semibold text-slate-900">AI-OS 已写出到本地目录</div>
+            <div className="mt-2 text-sm leading-6 text-slate-600">
+              当前已生成的目录：
+              {" "}
+              <span className="font-medium text-slate-900">{exportPath}</span>
+            </div>
+          </Card>
+        ) : null}
+
         <Card className="px-6 py-6 md:px-8 md:py-8">
           <SectionTag>AI-OS Output</SectionTag>
           <div className="mt-5 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
@@ -167,6 +182,14 @@ export default async function AiOsPage({
               </div>
             </div>
             <div className="flex flex-wrap gap-3">
+              <form action={exportAiOsAction}>
+                <input type="hidden" name="role" value={intake.role} />
+                <input type="hidden" name="goal" value={intake.goal} />
+                <input type="hidden" name="clients" value={intake.clients} />
+                <input type="hidden" name="tasks" value={intake.tasks} />
+                <input type="hidden" name="concerns" value={intake.concerns} />
+                <ExportAiOsButton />
+              </form>
               <Link
                 href={`/configure?${query}`}
                 className="inline-flex items-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700"
