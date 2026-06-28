@@ -1,4 +1,5 @@
 import { ArrowRight, Check, CircleDashed, LockKeyhole, Shield, Sparkles } from "lucide-react";
+import Link from "next/link";
 import {
   Card,
   Pill,
@@ -10,7 +11,21 @@ import {
 } from "@/components/ui";
 import { configureSteps, recommendedClients, recommendedMcp } from "@/lib/data";
 
-export default function ConfigurePage() {
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+function getFirst(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] ?? "" : value ?? "";
+}
+
+export default async function ConfigurePage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const params = await searchParams;
+  const role = getFirst(params.role);
+  const goal = getFirst(params.goal);
+
   return (
     <Shell className="pb-12">
       <TopNav />
@@ -43,6 +58,16 @@ export default function ConfigurePage() {
                 <div>所有高风险动作默认需要人工确认。</div>
               </div>
             </Card>
+
+            {(role || goal) ? (
+              <Card className="px-4 py-4">
+                <div className="text-sm font-semibold text-slate-900">来自诊断结果</div>
+                <div className="mt-3 space-y-2 text-sm leading-6 text-slate-600">
+                  {role ? <div><span className="font-medium text-slate-900">角色：</span>{role}</div> : null}
+                  {goal ? <div><span className="font-medium text-slate-900">目标：</span>{goal}</div> : null}
+                </div>
+              </Card>
+            ) : null}
           </aside>
 
           <div className="space-y-6">
@@ -133,7 +158,9 @@ export default function ConfigurePage() {
                   <div className="mt-1 text-sm text-slate-500">AI-OS 目录、客户端适配建议、MCP 选择、规则沉淀入口。</div>
                 </div>
                 <div className="flex flex-wrap gap-3">
-                  <SecondaryButton>返回诊断</SecondaryButton>
+                  <Link href="/diagnosis">
+                    <SecondaryButton>返回诊断</SecondaryButton>
+                  </Link>
                   <PrimaryButton>
                     继续生成 AI-OS
                     <ArrowRight className="h-4 w-4" />

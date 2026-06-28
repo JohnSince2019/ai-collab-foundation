@@ -18,6 +18,7 @@
 - 默认产品路径、MCP 选项层、客户端推荐矩阵已明确
 - Next.js 技术骨架已初始化
 - 首页、`/onboarding`、`/configure` 首版页面已实现
+- `onboarding -> diagnosis -> configure` MVP 主链路已实现
 - `npm run typecheck` 已通过
 - `npm run build` 已通过
 
@@ -44,8 +45,9 @@
 - [ ] 第一批 issues 已创建
 - [ ] issue 双语描述与 checklist 已补齐
 - [x] 技术骨架已初始化
-- [ ] 首版诊断表单已接入真实状态
-- [ ] 首版结果页已接入真实生成逻辑
+- [x] 首版诊断表单已接入真实状态
+- [x] 首版结果页已接入真实生成逻辑
+- [ ] AI-OS 结构化输出页已实现
 
 ## 5. 下一步建议
 
@@ -53,6 +55,6 @@
 
 1. 建立 `M1` milestones / issues
 2. 为第一个 issue 补齐 Business / Technical / AC / Test Plan / Evidence
-3. 把 onboarding 输入接入状态管理和结果页
-4. 实现 `AI 工作流诊断 MVP`
-5. 增加 Playwright 页面截图与关键流程验收
+3. 实现 `AI-OS` 结构化输出页
+4. 增强推荐矩阵、MCP 勾选与权限配置逻辑
+5. 增加 Playwright 页面截图与关键流程验收证据

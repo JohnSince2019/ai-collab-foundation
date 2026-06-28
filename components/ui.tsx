@@ -57,15 +57,24 @@ export function InputField({
   label,
   placeholder,
   helper,
+  name,
+  defaultValue,
+  required,
 }: {
   label: string;
   placeholder: string;
   helper?: string;
+  name?: string;
+  defaultValue?: string;
+  required?: boolean;
 }) {
   return (
     <label className="block">
       <div className="mb-2 text-sm font-medium text-slate-700">{label}</div>
       <input
+        name={name}
+        defaultValue={defaultValue}
+        required={required}
         className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-[15px] text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
         placeholder={placeholder}
       />
@@ -78,15 +87,24 @@ export function TextareaField({
   label,
   placeholder,
   helper,
+  name,
+  defaultValue,
+  required,
 }: {
   label: string;
   placeholder: string;
   helper?: string;
+  name?: string;
+  defaultValue?: string;
+  required?: boolean;
 }) {
   return (
     <label className="block">
       <div className="mb-2 text-sm font-medium text-slate-700">{label}</div>
       <textarea
+        name={name}
+        defaultValue={defaultValue}
+        required={required}
         className="min-h-32 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-[15px] text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
         placeholder={placeholder}
       />

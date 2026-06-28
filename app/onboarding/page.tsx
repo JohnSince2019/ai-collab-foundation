@@ -47,34 +47,58 @@ export default function OnboardingPage() {
               </div>
             </div>
 
-            <div className="mt-6 space-y-5">
-              <InputField label="你是谁" placeholder="例如：独立开发者 / 内容创作者 / 技术经理" helper="决定推荐客户端、工作流模板和默认交付链路。" />
-              <InputField label="你最重要的目标" placeholder="例如：建立稳定 AI 写作和产品开发协作流程" helper="先记录接下来 3-6 个月最想达成的目标。" />
-              <InputField label="你常用哪些 AI 客户端" placeholder="例如：Codex、ChatGPT、Cursor、Claude Code" helper="系统会据此给出主力组合与替补矩阵。" />
-              <TextareaField
-                label="你最常让 AI 帮你做什么"
-                placeholder="例如：写 PRD、拆需求、改代码、内容策划、研究分析、复盘总结。"
-                helper="这里会直接影响生成的高频工作流模板。"
-              />
-              <TextareaField
-                label="你最担心 AI 出什么问题"
-                placeholder="例如：乱改文件、误删、上下文不一致、风格跑偏、做完但没验证。"
-                helper="这些担忧会进入默认权限和确认机制。"
-              />
-            </div>
+            <form action="/diagnosis" className="mt-6">
+              <div className="space-y-5">
+                <InputField
+                  name="role"
+                  required
+                  label="你是谁"
+                  placeholder="例如：独立开发者 / 内容创作者 / 技术经理"
+                  helper="决定推荐客户端、工作流模板和默认交付链路。"
+                />
+                <InputField
+                  name="goal"
+                  required
+                  label="你最重要的目标"
+                  placeholder="例如：建立稳定 AI 写作和产品开发协作流程"
+                  helper="先记录接下来 3-6 个月最想达成的目标。"
+                />
+                <InputField
+                  name="clients"
+                  required
+                  label="你常用哪些 AI 客户端"
+                  placeholder="例如：Codex、ChatGPT、Cursor、Claude Code"
+                  helper="系统会据此给出主力组合与替补矩阵。"
+                />
+                <TextareaField
+                  name="tasks"
+                  required
+                  label="你最常让 AI 帮你做什么"
+                  placeholder="例如：写 PRD、拆需求、改代码、内容策划、研究分析、复盘总结。"
+                  helper="这里会直接影响生成的高频工作流模板。"
+                />
+                <TextareaField
+                  name="concerns"
+                  required
+                  label="你最担心 AI 出什么问题"
+                  placeholder="例如：乱改文件、误删、上下文不一致、风格跑偏、做完但没验证。"
+                  helper="这些担忧会进入默认权限和确认机制。"
+                />
+              </div>
 
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <PrimaryButton>
-                生成诊断与推荐
-                <ArrowRight className="h-4 w-4" />
-              </PrimaryButton>
-              <Link
-                href="/configure"
-                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700"
-              >
-                直接查看配置流程
-              </Link>
-            </div>
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                <PrimaryButton>
+                  生成诊断与推荐
+                  <ArrowRight className="h-4 w-4" />
+                </PrimaryButton>
+                <Link
+                  href="/configure"
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700"
+                >
+                  直接查看配置流程
+                </Link>
+              </div>
+            </form>
           </Card>
         </div>
       </main>
