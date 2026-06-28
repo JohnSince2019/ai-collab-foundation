@@ -14,6 +14,20 @@ export type RetrospectiveDraft = {
   savePolicy: string[];
 };
 
+export type RuleCandidate = {
+  id: string;
+  title: string;
+  content: string;
+  category: "rules" | "workflows" | "decisions";
+  rationale: string;
+  source: string;
+};
+
+export type RuleCandidateResult = {
+  summary: string;
+  candidates: RuleCandidate[];
+};
+
 function sentence(input: string, fallback: string) {
   const trimmed = input.trim();
   return trimmed.length > 0 ? trimmed : fallback;
@@ -67,5 +81,49 @@ export function buildRetrospectiveDraft(
       "没有确认的内容只保留在复盘结果里，不自动写回共享规则文件。",
       "后续保存时只做轻量版本记录：版本号、时间、变更摘要。",
     ],
+  };
+}
+
+export function buildRuleCandidates(
+  input: IntakeInput,
+  diagnosis: DiagnosisProfile,
+  artifact: AiOsArtifact,
+  retrospective: RetrospectiveDraft,
+): RuleCandidateResult {
+  const primaryClient = diagnosis.recommendedClients[0]?.name ?? "Codex + GPT-5 系列";
+  const firstRule = artifact.operatingRules[0] ?? "完成关键动作后必须验证结果。";
+  const firstWorkflow = artifact.firstActions[0] ?? "先定义目标，再开始执行。";
+  const firstSignal = retrospective.fields[3]?.defaultValue ?? "优先沉淀可复用经验。";
+
+  const candidates: RuleCandidate[] = [
+    {
+      id: "candidate-rule-verification",
+      title: "把验证前置为共享边界",
+      category: "rules",
+      content: `凡是涉及“${sentence(input.goal, "关键任务交付")}”的执行，默认遵守：${firstRule}`,
+      rationale: "这条经验会影响大多数任务边界，属于全局约束，而不是某一次任务的小技巧。",
+      source: `来源：复盘字段「这次哪里卡住了」+ 当前瓶颈「${diagnosis.bottleneck}」`,
+    },
+    {
+      id: "candidate-workflow-retro",
+      title: "把任务后复盘固定进默认流程",
+      category: "workflows",
+      content: `新增固定步骤：完成任务 -> 回看产出与风险 -> 提炼候选规则 -> 再决定是否写回 AI-OS。当前默认起点：${firstWorkflow}`,
+      rationale: "这条经验描述的是可重复执行顺序，更适合进入工作流文件，而不是全局行为边界。",
+      source: "来源：复盘字段「哪些经验值得沉淀成规则」+ 当前 first actions",
+    },
+    {
+      id: "candidate-decision-stack",
+      title: "记录本轮客户端与权限选择",
+      category: "decisions",
+      content: `本轮优先使用 ${primaryClient} 作为主力推进端；若任务风险上升，则回退到更保守权限模式后再继续。`,
+      rationale: "这条经验对当前项目很重要，但还不一定应该立刻升级成所有任务通用规则。",
+      source: `来源：推荐客户端「${primaryClient}」+ 复盘信号「${firstSignal}」`,
+    },
+  ];
+
+  return {
+    summary: "以下是系统基于当前复盘结构自动整理出的首版候选规则。现在先展示分类与原因，下一步再进入逐条确认保存。",
+    candidates,
   };
 }

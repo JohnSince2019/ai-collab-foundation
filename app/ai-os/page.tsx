@@ -9,7 +9,7 @@ import { buildRuleScanContent, detectExistingRules } from "@/lib/rule-scanner";
 import { buildDiffPlan, buildDiffPlanContent } from "@/lib/diff-planner";
 import { buildRiskGuardContent, detectRiskGuard } from "@/lib/risk-guard";
 import { buildMcpHealthContent, detectMcpHealth } from "@/lib/mcp-health";
-import { buildRetrospectiveDraft } from "@/lib/retrospective";
+import { buildRetrospectiveDraft, buildRuleCandidates } from "@/lib/retrospective";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -66,6 +66,7 @@ export default async function AiOsPage({
   const mcpHealth = await detectMcpHealth(intake, diagnosis);
   const mcpHealthContent = buildMcpHealthContent(mcpHealth);
   const retrospective = buildRetrospectiveDraft(intake, diagnosis, artifact);
+  const ruleCandidates = buildRuleCandidates(intake, diagnosis, artifact, retrospective);
   const query = buildQuery(intake);
   const exported = getFirst(params.exported) === "1";
   const exportPath = getFirst(params.exportPath);
@@ -234,6 +235,36 @@ export default async function AiOsPage({
                 </div>
               ))}
             </div>
+          </div>
+        </Card>
+
+        <Card className="px-6 py-6 md:px-8">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <div className="text-sm font-semibold text-slate-900">规则候选生成与分类</div>
+              <div className="mt-1 text-sm leading-6 text-slate-500">
+                系统先基于复盘结构生成候选，再告诉你它为什么被分到这个层级。
+              </div>
+            </div>
+            <Pill>{ruleCandidates.candidates.length} 条候选</Pill>
+          </div>
+          <div className="mt-4 rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
+            {ruleCandidates.summary}
+          </div>
+          <div className="mt-4 space-y-3">
+            {ruleCandidates.candidates.map((item) => (
+              <div key={item.id} className="rounded-[24px] border border-slate-200 bg-white px-4 py-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="text-sm font-semibold text-slate-900">{item.title}</div>
+                  <Pill>{item.category}</Pill>
+                </div>
+                <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-700">
+                  {item.content}
+                </div>
+                <div className="mt-3 text-sm leading-6 text-slate-600">{item.rationale}</div>
+                <div className="mt-1 text-sm leading-6 text-slate-500">{item.source}</div>
+              </div>
+            ))}
           </div>
         </Card>
 
