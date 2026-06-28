@@ -183,6 +183,18 @@ export function buildAiOsArtifact(input: IntakeInput, diagnosis: DiagnosisProfil
       purpose: "记录 Codex / 主力客户端的执行偏好和项目默认链路。",
     },
     {
+      path: "AI-OS/clients/claude-code.md",
+      purpose: "记录 Claude Code 的分析、重构和长文本协作模式。",
+    },
+    {
+      path: "AI-OS/clients/cursor.md",
+      purpose: "记录 Cursor 在 IDE 内补强和局部实现中的使用方式。",
+    },
+    {
+      path: "AI-OS/clients/copilot.md",
+      purpose: "记录 Copilot 在代码补全与局部建议中的协作边界。",
+    },
+    {
       path: "AI-OS/memory/decisions.md",
       purpose: "沉淀关键决策、例外情况和后续沿用规则。",
     },
@@ -248,6 +260,57 @@ ${clientProfiles[0].usage}
 - Keep human confirmation for high-risk real-world actions
 `;
 
+  const claudeCodeClientContent = `# Claude Code Client Profile
+
+## Mission
+作为长文本分析与方案讨论客户端，帮助拆解复杂问题、比较方案、阅读大段文档与代码。
+
+## Best Use Cases
+- 复杂需求澄清
+- 代码阅读与重构讨论
+- 长文档分析与总结
+- 备选实现路径评估
+
+## Working Rules
+- 共享同一套 AI-OS identity / rules / workflows
+- 重点输出思路、解释、风险和替代方案
+- 最终执行标准仍要回到统一验证链路
+`;
+
+  const cursorClientContent = `# Cursor Client Profile
+
+## Mission
+作为 IDE 内高频补强客户端，负责局部编辑、快速导航、短链路生成与即时修补。
+
+## Best Use Cases
+- 局部代码补全
+- 小范围重构
+- 快速插入样板代码
+- 配合主力客户端执行细部实现
+
+## Working Rules
+- 遵循 AI-OS 统一规则，不单独漂移
+- 更适合局部效率，不承担全链路完成声明
+- 关键改动仍需要回到统一验证与证据要求
+`;
+
+  const copilotClientContent = `# Copilot Client Profile
+
+## Mission
+作为代码补全层，提升局部编码速度，但不承担项目规则源和任务完成判断。
+
+## Best Use Cases
+- 代码补全
+- 小片段生成
+- 重复代码加速
+- 简单注释与接口样板
+
+## Working Rules
+- 使用 AI-OS 中的统一命名、风格与边界
+- 不把 Copilot 生成内容视为已验证结果
+- 重要逻辑、发布级改动与任务闭环交给主力客户端处理
+`;
+
   const memoryLoop = [
     "任务前：读取 AI-OS 规则与相关工作流模板。",
     "任务中：记录新的约束、例外和有效做法。",
@@ -299,6 +362,21 @@ ${firstActions.map((item) => `- ${item}`).join("\n")}
       path: "AI-OS/clients/codex.md",
       purpose: "记录 Codex / 主力客户端的执行偏好和项目默认链路。",
       content: codexClientContent,
+    },
+    {
+      path: "AI-OS/clients/claude-code.md",
+      purpose: "记录 Claude Code 的分析、重构和长文本协作模式。",
+      content: claudeCodeClientContent,
+    },
+    {
+      path: "AI-OS/clients/cursor.md",
+      purpose: "记录 Cursor 在 IDE 内补强和局部实现中的使用方式。",
+      content: cursorClientContent,
+    },
+    {
+      path: "AI-OS/clients/copilot.md",
+      purpose: "记录 Copilot 在代码补全与局部建议中的协作边界。",
+      content: copilotClientContent,
     },
     {
       path: "AI-OS/memory/decisions.md",

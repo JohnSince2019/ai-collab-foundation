@@ -22,6 +22,7 @@
 - `AI-OS` 结构化输出页已实现
 - `AI-OS` 文件级内容预览已实现
 - `AI-OS` 首版 `.md` 文件真实写出已实现
+- `Codex / Claude Code / Cursor / Copilot` 适配文件已纳入输出
 - `npm run typecheck` 已通过
 - `npm run build` 已通过
 
