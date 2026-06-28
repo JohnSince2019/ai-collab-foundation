@@ -37,6 +37,11 @@ export type AiOsArtifact = {
   }>;
   memoryLoop: string[];
   firstActions: string[];
+  fileContents: Array<{
+    path: string;
+    purpose: string;
+    content: string;
+  }>;
 };
 
 function includesAny(source: string, terms: string[]) {
@@ -183,6 +188,66 @@ export function buildAiOsArtifact(input: IntakeInput, diagnosis: DiagnosisProfil
     },
   ];
 
+  const identityContent = `# Identity
+
+## Role
+${input.role || diagnosis.roleLabel}
+
+## North Star
+${input.goal || "建立统一 AI 协作系统"}
+
+## Primary Work
+${input.tasks || "待补充高频任务"}
+
+## Main Concerns
+${input.concerns || "待补充风险边界"}
+
+## Collaboration Style
+- Prefer reusable workflows over one-off prompts
+- Keep one shared source of truth across AI clients
+- Review high-risk actions before execution
+`;
+
+  const rulesContent = `# Rules
+
+## Global Rules
+${operatingRules.map((item) => `- ${item}`).join("\n")}
+
+## Permission Start Point
+- ${diagnosis.permissionMode}
+
+## Verification Standard
+- Important tasks should include result checking, not just "no local error"
+- New projects inherit these rules by default
+`;
+
+  const workflowsContent = `# Workflows
+
+## Priority Templates
+${diagnosis.workflowTemplates.map((item) => `- ${item}`).join("\n")}
+
+## Suggested Execution Chain
+1. Read identity + rules
+2. Clarify task goal and output
+3. Select the best client for the task
+4. Execute and verify
+5. Write reusable learnings back to memory
+`;
+
+  const codexClientContent = `# Codex Client Profile
+
+## Mission
+${clientProfiles[0].mission}
+
+## Best Use Cases
+${clientProfiles[0].usage}
+
+## Default Mode
+- Prefer long-running execution for document-driven implementation
+- Use local docs and issue mirrors as working evidence
+- Keep human confirmation for high-risk real-world actions
+`;
+
   const memoryLoop = [
     "任务前：读取 AI-OS 规则与相关工作流模板。",
     "任务中：记录新的约束、例外和有效做法。",
@@ -198,6 +263,50 @@ export function buildAiOsArtifact(input: IntakeInput, diagnosis: DiagnosisProfil
     "选择一个高频任务做首轮闭环验证",
   ];
 
+  const decisionsContent = `# Decisions Memory
+
+## Active Goal
+${input.goal || "建立统一 AI 协作系统"}
+
+## Current Bottleneck
+${diagnosis.bottleneck}
+
+## Current Preferred Stack
+- ${primaryClient}
+- ${secondaryClient}
+
+## Next Updates
+${firstActions.map((item) => `- ${item}`).join("\n")}
+`;
+
+  const fileContents = [
+    {
+      path: "AI-OS/identity.md",
+      purpose: "记录你的角色、目标、工作方式和协作边界。",
+      content: identityContent,
+    },
+    {
+      path: "AI-OS/rules.md",
+      purpose: "记录统一规则、权限等级、验证要求和禁止事项。",
+      content: rulesContent,
+    },
+    {
+      path: "AI-OS/workflows.md",
+      purpose: "记录高频任务模板、交付步骤、复盘结构和默认输出。",
+      content: workflowsContent,
+    },
+    {
+      path: "AI-OS/clients/codex.md",
+      purpose: "记录 Codex / 主力客户端的执行偏好和项目默认链路。",
+      content: codexClientContent,
+    },
+    {
+      path: "AI-OS/memory/decisions.md",
+      purpose: "沉淀关键决策、例外情况和后续沿用规则。",
+      content: decisionsContent,
+    },
+  ];
+
   return {
     workspaceName,
     northStar: `让 AI 按统一规则稳定协作，围绕“${input.goal || "高质量完成关键任务"}”持续复利。`,
@@ -206,5 +315,6 @@ export function buildAiOsArtifact(input: IntakeInput, diagnosis: DiagnosisProfil
     starterFiles,
     memoryLoop,
     firstActions,
+    fileContents,
   };
 }

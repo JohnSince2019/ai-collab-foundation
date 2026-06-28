@@ -140,6 +140,24 @@ export default async function AiOsPage({
           </Card>
         </div>
 
+        <Card className="px-6 py-6 md:px-8">
+          <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+            <FolderTree className="h-4 w-4 text-indigo-600" />
+            AI-OS 文件内容预览
+          </div>
+          <div className="mt-5 space-y-4">
+            {artifact.fileContents.map((item) => (
+              <div key={item.path} className="overflow-hidden rounded-[24px] border border-slate-200 bg-white">
+                <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
+                  <div className="text-sm font-semibold text-slate-900">{item.path}</div>
+                  <div className="mt-1 text-sm text-slate-500">{item.purpose}</div>
+                </div>
+                <pre className="overflow-x-auto px-4 py-4 text-xs leading-6 text-slate-700 whitespace-pre-wrap">{item.content}</pre>
+              </div>
+            ))}
+          </div>
+        </Card>
+
         <Card className="px-6 py-5 md:px-8">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>

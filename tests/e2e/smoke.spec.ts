@@ -20,6 +20,8 @@ test("home and key flows render", async ({ page }) => {
   await expect(page.getByText("建立统一 AI 协作底座")).toBeVisible();
   await page.getByRole("link", { name: "继续生成 AI-OS" }).click();
   await expect(page.getByText("这是你的第一版 AI-OS，可直接作为后续项目的起点。")).toBeVisible();
-  await expect(page.getByText("AI-OS/identity.md")).toBeVisible();
-  await expect(page.getByText("所有客户端共享同一套目标、角色、任务边界与输出标准。")).toBeVisible();
+  await expect(page.getByText("AI-OS/identity.md").first()).toBeVisible();
+  await expect(page.getByText("所有客户端共享同一套目标、角色、任务边界与输出标准。").first()).toBeVisible();
+  await expect(page.getByText("# Identity")).toBeVisible();
+  await expect(page.getByText("# Rules")).toBeVisible();
 });
