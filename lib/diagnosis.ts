@@ -202,6 +202,14 @@ export function buildAiOsArtifact(input: IntakeInput, diagnosis: DiagnosisProfil
       path: "AI-OS/install/adapter-setup.md",
       purpose: "说明如何把这套 AI-OS 与不同客户端接起来。",
     },
+    {
+      path: "AI-OS/install/target-locations.md",
+      purpose: "说明不同客户端建议放置这些规则文件的位置。",
+    },
+    {
+      path: "AI-OS/install/verification-checklist.md",
+      purpose: "说明接入后如何验证客户端真的读到了这套规则。",
+    },
   ];
 
   const identityContent = `# Identity
@@ -378,6 +386,62 @@ ${firstActions.map((item) => `- ${item}`).join("\n")}
 - Update AI-OS when a new integration becomes part of the default workflow
 `;
 
+  const targetLocationsContent = `# Target Locations
+
+## Codex
+- Project root: \`AGENTS.md\`
+- Supporting directory: keep \`AI-OS/\` in the project root
+- Optional: put reusable repo-level notes next to \`PROJECT-SOP.md\`
+
+## Claude Code
+- Keep \`AI-OS/\` in the project root or workspace root
+- Reference \`AI-OS/clients/claude-code.md\` at the start of long sessions
+- If the repo has its own instruction file, point it back to the shared AI-OS files
+
+## Cursor
+- Keep \`AI-OS/\` in the repo root for easy IDE access
+- Mirror stable rules into Cursor project rules only when needed
+- Treat Cursor rules as a projection of AI-OS, not a separate source
+
+## Copilot
+- Keep \`AI-OS/\` available in the repo root
+- Use the client profile as a reference for style, boundaries, and completion expectations
+- Do not rely on Copilot-only state for persistent rules
+
+## MCP Notes
+- Document enabled MCPs in \`AI-OS/memory/decisions.md\`
+- Keep integration rationale near the rules instead of hiding it in chat history
+`;
+
+  const verificationChecklistContent = `# Verification Checklist
+
+## Shared Checks
+- Can the client describe your role, north star, and main task types?
+- Does the client follow the same output boundary as \`AI-OS/rules.md\`?
+- Does it avoid claiming completion without verification?
+
+## Codex
+- Ask it to summarize the project rules before editing files
+- Confirm it references evidence, validation, or repo instructions in its plan
+- Confirm high-risk actions still require human confirmation
+
+## Claude Code
+- Ask it to explain your task boundary and main decision criteria
+- Confirm it produces analysis consistent with \`AI-OS/clients/claude-code.md\`
+- Confirm it does not drift into a conflicting workflow
+
+## Cursor
+- Check whether its suggestions match the shared naming, style, and workflow
+- Confirm important changes still route back to the main validation chain
+
+## Copilot
+- Check whether completions respect local naming and style expectations
+- Confirm Copilot output is treated as suggestion, not completed work
+
+## Pass Condition
+- The setup counts as successful only when multiple clients reflect the same base identity, rules, and workflow expectations
+`;
+
   const fileContents = [
     {
       path: "AI-OS/identity.md",
@@ -423,6 +487,16 @@ ${firstActions.map((item) => `- ${item}`).join("\n")}
       path: "AI-OS/install/adapter-setup.md",
       purpose: "说明如何把这套 AI-OS 与不同客户端接起来。",
       content: installGuideContent,
+    },
+    {
+      path: "AI-OS/install/target-locations.md",
+      purpose: "说明不同客户端建议放置这些规则文件的位置。",
+      content: targetLocationsContent,
+    },
+    {
+      path: "AI-OS/install/verification-checklist.md",
+      purpose: "说明接入后如何验证客户端真的读到了这套规则。",
+      content: verificationChecklistContent,
     },
   ];
 
