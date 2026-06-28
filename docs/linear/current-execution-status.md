@@ -25,6 +25,7 @@
 - `Codex / Claude Code / Cursor / Copilot` 适配文件已纳入输出
 - 客户端接入安装说明已纳入输出
 - 客户端目标放置位置与验证清单已纳入输出
+- `AGENTS.md / Cursor rules / Claude session` 模板已纳入输出
 - `npm run typecheck` 已通过
 - `npm run build` 已通过
 

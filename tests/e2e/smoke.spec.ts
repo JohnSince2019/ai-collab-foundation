@@ -27,12 +27,18 @@ test("home and key flows render", async ({ page }) => {
   await expect(page.getByText("AI-OS/install/adapter-setup.md").first()).toBeVisible();
   await expect(page.getByText("AI-OS/install/target-locations.md").first()).toBeVisible();
   await expect(page.getByText("AI-OS/install/verification-checklist.md").first()).toBeVisible();
+  await expect(page.getByText("AI-OS/templates/AGENTS.md.template").first()).toBeVisible();
+  await expect(page.getByText("AI-OS/templates/cursor-project-rules.template.md").first()).toBeVisible();
+  await expect(page.getByText("AI-OS/templates/claude-code-session-template.md").first()).toBeVisible();
   await expect(page.getByText("所有客户端共享同一套目标、角色、任务边界与输出标准。").first()).toBeVisible();
   await expect(page.getByText("# Identity")).toBeVisible();
   await expect(page.getByText("# Claude Code Client Profile")).toBeVisible();
   await expect(page.getByText("# Adapter Setup Guide")).toBeVisible();
   await expect(page.getByText("# Target Locations")).toBeVisible();
   await expect(page.getByText("# Verification Checklist")).toBeVisible();
+  await expect(page.getByText("# AGENTS.md Template")).toBeVisible();
+  await expect(page.getByText("# Cursor Project Rules Template")).toBeVisible();
+  await expect(page.getByText("# Claude Code Session Template")).toBeVisible();
   await expect(page.getByText("# Rules")).toBeVisible();
   await page.getByRole("button", { name: "写出 AI-OS 文件" }).click();
   await expect(page.getByText("AI-OS 已写出到本地目录")).toBeVisible();

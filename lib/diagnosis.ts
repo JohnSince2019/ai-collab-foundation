@@ -210,6 +210,18 @@ export function buildAiOsArtifact(input: IntakeInput, diagnosis: DiagnosisProfil
       path: "AI-OS/install/verification-checklist.md",
       purpose: "说明接入后如何验证客户端真的读到了这套规则。",
     },
+    {
+      path: "AI-OS/templates/AGENTS.md.template",
+      purpose: "给 Codex 或类似代理式客户端使用的项目级说明模板。",
+    },
+    {
+      path: "AI-OS/templates/cursor-project-rules.template.md",
+      purpose: "给 Cursor 项目规则使用的首版模板。",
+    },
+    {
+      path: "AI-OS/templates/claude-code-session-template.md",
+      purpose: "给 Claude Code 开场输入使用的首版模板。",
+    },
   ];
 
   const identityContent = `# Identity
@@ -442,6 +454,73 @@ ${firstActions.map((item) => `- ${item}`).join("\n")}
 - The setup counts as successful only when multiple clients reflect the same base identity, rules, and workflow expectations
 `;
 
+  const agentsTemplateContent = `# AGENTS.md Template
+
+## Project Identity
+- Role: ${input.role || diagnosis.roleLabel}
+- North Star: ${input.goal || "建立统一 AI 协作系统"}
+
+## Shared Sources
+- Read \`AI-OS/identity.md\`
+- Read \`AI-OS/rules.md\`
+- Read \`AI-OS/workflows.md\`
+- Read \`AI-OS/memory/decisions.md\` when relevant
+
+## Working Rules
+- Follow shared AI-OS rules before starting execution
+- Do not claim completion without verification
+- Use evidence from files, tests, or runtime behavior
+- Keep high-risk actions behind human confirmation
+
+## Preferred Flow
+1. Clarify goal
+2. Inspect relevant files
+3. Execute within agreed permissions
+4. Verify outcome
+5. Write reusable learnings back into AI-OS
+`;
+
+  const cursorRulesTemplateContent = `# Cursor Project Rules Template
+
+## Role
+${input.role || diagnosis.roleLabel}
+
+## Goal
+${input.goal || "建立统一 AI 协作系统"}
+
+## Cursor Scope
+- Use Cursor for local acceleration, short edits, and IDE-level assistance
+- Follow the same naming, style, and workflow boundaries as AI-OS
+- Escalate major implementation and completion checks to the main workflow
+
+## Must Read
+- AI-OS/identity.md
+- AI-OS/rules.md
+- AI-OS/workflows.md
+- AI-OS/clients/cursor.md
+`;
+
+  const claudeCodeSessionTemplateContent = `# Claude Code Session Template
+
+You are helping with:
+- Role: ${input.role || diagnosis.roleLabel}
+- Goal: ${input.goal || "建立统一 AI 协作系统"}
+
+Before answering:
+1. Align with AI-OS/identity.md
+2. Respect AI-OS/rules.md
+3. Use AI-OS/workflows.md for structure
+4. Follow AI-OS/clients/claude-code.md for discussion style
+
+Focus on:
+- explanation
+- alternatives
+- risks
+- reasoning quality
+
+Do not mark work complete without shared verification standards.
+`;
+
   const fileContents = [
     {
       path: "AI-OS/identity.md",
@@ -497,6 +576,21 @@ ${firstActions.map((item) => `- ${item}`).join("\n")}
       path: "AI-OS/install/verification-checklist.md",
       purpose: "说明接入后如何验证客户端真的读到了这套规则。",
       content: verificationChecklistContent,
+    },
+    {
+      path: "AI-OS/templates/AGENTS.md.template",
+      purpose: "给 Codex 或类似代理式客户端使用的项目级说明模板。",
+      content: agentsTemplateContent,
+    },
+    {
+      path: "AI-OS/templates/cursor-project-rules.template.md",
+      purpose: "给 Cursor 项目规则使用的首版模板。",
+      content: cursorRulesTemplateContent,
+    },
+    {
+      path: "AI-OS/templates/claude-code-session-template.md",
+      purpose: "给 Claude Code 开场输入使用的首版模板。",
+      content: claudeCodeSessionTemplateContent,
     },
   ];
 
