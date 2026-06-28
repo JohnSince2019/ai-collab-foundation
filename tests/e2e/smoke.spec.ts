@@ -176,6 +176,8 @@ test("home and key flows render", async ({ page }) => {
   await expect(page.getByText("配置 diff 预览与合并建议")).toBeVisible();
   await expect(page.getByText("敏感信息检查与风险提示")).toBeVisible();
   await expect(page.getByText("MCP 连接状态检测与失败兜底")).toBeVisible();
+  await expect(page.getByText("ContentOps 联动产物检查")).toBeVisible();
+  await expect(page.getByText("AI-OS/contentops/mother-draft-prompt.md").last()).toBeVisible();
   await expect(page.getByText("已导出但未放置")).toBeVisible();
   await expect(page.getByText("已放置待验证")).toBeVisible();
   await expect(page.getByText("已接入可使用")).toBeVisible();

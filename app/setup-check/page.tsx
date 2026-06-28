@@ -119,6 +119,7 @@ export default async function SetupCheckPage({
   const mcpHealth = await detectMcpHealth(intake, diagnosis);
   const verification = artifact.fileContents.find((item) => item.path === "AI-OS/install/verification-checklist.md");
   const targets = artifact.fileContents.find((item) => item.path === "AI-OS/install/target-locations.md");
+  const contentOpsArtifacts = artifact.fileContents.filter((item) => item.path.startsWith("AI-OS/contentops/"));
   const query = buildQuery(intake);
   const hasExport = getFirst(params.exported) === "1";
   const stages = buildSetupStages(hasExport);
@@ -343,6 +344,33 @@ export default async function SetupCheckPage({
         </div>
 
         <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
+          <Card className="px-6 py-6 md:px-8 xl:col-span-2">
+            <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+              <FolderTree className="h-4 w-4 text-sky-600" />
+              ContentOps 联动产物检查
+            </div>
+            <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
+              这组文件就是 ContentOps 在母稿生成前应读取的上游上下文层。真正联动成功，不只是文件存在，而是下游生成链路能按这些文件的顺序消费它们。
+            </div>
+            <div className="mt-4 grid gap-3 xl:grid-cols-2">
+              {contentOpsArtifacts.map((item) => (
+                <div key={item.path} className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
+                  <div className="text-sm font-semibold text-slate-900">{item.path}</div>
+                  <div className="mt-1 text-sm leading-6 text-slate-600">{item.purpose}</div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-4 text-sm leading-6 text-slate-500">
+              验收重点：先确认
+              {" "}
+              <span className="font-mono text-slate-600">
+                profile -&gt; boundaries -&gt; style-card -&gt; source-map -&gt; draft-context -&gt; mother-draft-prompt
+              </span>
+              {" "}
+              已完整导出，再确认下游内容生成不会绕过这些文件。
+            </div>
+          </Card>
+
           <Card className="px-6 py-6 md:px-8">
             <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
               <FolderTree className="h-4 w-4 text-indigo-600" />
