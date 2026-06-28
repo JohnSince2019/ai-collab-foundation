@@ -6,7 +6,7 @@
 
 - 项目状态：`M4 in progress`
 - 当前 milestone：`M4 · ContentOps 联动`
-- 当前目标：继续推进 `M4 · ContentOps 联动`，当前下一项为 `JOH-193` 母稿生成上下文注入与联动验收
+- 当前目标：等待 `JOH-193` 的最终联动验收；技术实现与自动化验证已完成
 
 ## 1.1 Linear 真实项目结构
 
@@ -83,7 +83,7 @@ Linear 项目：`AI Collab Foundation`
 - `JOH-190` `M4-02 · 内容边界读取与规则注入` -> `Done`
 - `JOH-191` `M4-03 · 表达风格读取与风格卡生成` -> `Done`
 - `JOH-192` `M4-04 · 高频素材来源读取与结构化映射` -> `Done`
-- `JOH-193` `M4-05 · 母稿生成上下文注入与联动验收` -> `Todo`
+- `JOH-193` `M4-05 · 母稿生成上下文注入与联动验收` -> `In Progress (awaiting John passed)`
 - `JOH-194` `M5-01 · 产品级上下文 API 定义` -> `Todo`
 - `JOH-195` `M5-02 · SyncTarget 管理模型` -> `Todo`
 - `JOH-196` `M5-03 · LLM Gateway 路由准备` -> `Todo`
@@ -96,7 +96,7 @@ Linear 项目：`AI Collab Foundation`
 ## 4. 当前结论
 
 - M0、M1、M2、M3 已按串行规则执行完成
-- 当前下一执行项为 `JOH-193`，对应 `M4-05 · 母稿生成上下文注入与联动验收`
+- 当前下一执行项为 `JOH-193` 的最终联动验收
 - M4 的执行顺序为：用户定位 -> 内容边界 -> 表达风格 -> 素材来源 -> 母稿注入与联动验收
 
 ## 5. 启动前检查
@@ -119,6 +119,6 @@ Linear 项目：`AI Collab Foundation`
 
 下一步重点是继续按 M4 顺序推进：
 
-1. 将 `JOH-193` 设为 `In Progress` 后开始实现 M4-05
-2. 每完成一个 M4 issue，都同步更新 Linear 与本地 `docs/linear/`
-3. M4 全部 issues 完成后，先向 John 汇报，再等待是否继续进入 M5
+1. 由 John 对 `JOH-193` 给出最终 `passed`
+2. 在收到 `passed` 前，保持 `JOH-193` 为 `In Progress`
+3. `JOH-193` 验收完成后，M4 全部 issue 才可统一收口并等待是否进入 M5

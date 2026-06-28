@@ -185,6 +185,34 @@ export type SourceMap = {
   }>;
 };
 
+export type DraftContextBundle = {
+  bundleVersion: string;
+  summary: string;
+  source: {
+    northStar: string;
+    profileVersion: string;
+    boundaryVersion: string;
+    styleVersion: string;
+    sourceMapVersion: string;
+  };
+  draftInputs: {
+    positioning: string;
+    audience: string;
+    contentPillars: string[];
+    hardStops: string[];
+    styleTone: string[];
+    preferredFormats: string[];
+    preDraftSources: string[];
+  };
+  draftFlow: string[];
+  reviewChecklist: string[];
+  mappingNotes: Array<{
+    targetField: string;
+    derivedFrom: string[];
+    rationale: string;
+  }>;
+};
+
 export type AiOsArtifact = {
   workspaceName: string;
   northStar: string;
@@ -192,6 +220,7 @@ export type AiOsArtifact = {
   contentBoundaryProfile: ContentBoundaryProfile;
   styleCard: StyleCard;
   sourceMap: SourceMap;
+  draftContextBundle: DraftContextBundle;
   operatingRules: string[];
   clientProfiles: Array<{
     name: string;
@@ -1011,6 +1040,70 @@ export function buildSourceMap(input: IntakeInput, diagnosis: DiagnosisProfile):
   };
 }
 
+export function buildDraftContextBundle(
+  artifactBase: {
+    northStar: string;
+    contentOpsProfile: ContentOpsProfile;
+    contentBoundaryProfile: ContentBoundaryProfile;
+    styleCard: StyleCard;
+    sourceMap: SourceMap;
+  },
+): DraftContextBundle {
+  const { northStar, contentOpsProfile, contentBoundaryProfile, styleCard, sourceMap } = artifactBase;
+
+  return {
+    bundleVersion: "v0.1.0",
+    summary: "把定位、边界、风格与素材来源打包成母稿生成前必须读取的一组上游上下文。",
+    source: {
+      northStar,
+      profileVersion: contentOpsProfile.profileVersion,
+      boundaryVersion: contentBoundaryProfile.boundaryVersion,
+      styleVersion: styleCard.styleVersion,
+      sourceMapVersion: sourceMap.sourceMapVersion,
+    },
+    draftInputs: {
+      positioning: contentOpsProfile.positioning.positioningStatement,
+      audience: contentOpsProfile.audience.primaryAudience,
+      contentPillars: [...contentOpsProfile.topics.contentPillars],
+      hardStops: [...contentBoundaryProfile.boundaries.hardStops],
+      styleTone: [...styleCard.voice.tone],
+      preferredFormats: [...contentOpsProfile.execution.preferredFormats],
+      preDraftSources: [...sourceMap.contentOpsUse.preDraftSources],
+    },
+    draftFlow: [
+      "先读 profile.json，确认定位、目标受众和内容支柱。",
+      "再读 boundaries.json，确认哪些内容不能越界、哪些环节必须复核。",
+      "再读 style-card.json，确认语气、节奏、结构偏好与避免项。",
+      "最后读 source-map.json，按优先顺序补充当前任务相关素材来源。",
+      "以上四层对齐后，再进入提纲、母稿和内容生成。",
+    ],
+    reviewChecklist: [
+      "母稿是否仍然对齐用户定位与当前 north star。",
+      "是否违反任何 hard stop 或 review-required 边界。",
+      "表达方式是否符合 style card，而不是跑偏成泛化营销腔。",
+      "素材引用是否来自 source map 允许的来源，而不是凭空补全。",
+      "输出是否保留了结构化、可复用、可验证的特征。",
+    ],
+    mappingNotes: [
+      {
+        targetField: "draftInputs.*",
+        derivedFrom: ["contentOpsProfile", "contentBoundaryProfile", "styleCard", "sourceMap"],
+        rationale: "把前面四层上下文压成母稿生成前真正需要的核心字段，降低下游消费复杂度。",
+      },
+      {
+        targetField: "draftFlow",
+        derivedFrom: ["sourceMap.preDraftSources", "boundary injection order"],
+        rationale: "明确生成顺序，避免只读其中一层就开始写母稿。",
+      },
+      {
+        targetField: "reviewChecklist",
+        derivedFrom: ["boundaries", "styleCard", "sourceMap", "profile"],
+        rationale: "把联动验收前置成一张检查表，保证 ContentOps 消费结果可验证。",
+      },
+    ],
+  };
+}
+
 export function buildAiOsArtifact(input: IntakeInput, diagnosis: DiagnosisProfile): AiOsArtifact {
   const primaryClient = diagnosis.recommendedClients[0]?.name ?? "Codex + GPT-5 系列";
   const secondaryClient = diagnosis.recommendedClients[1]?.name ?? "Claude Code";
@@ -1035,6 +1128,14 @@ export function buildAiOsArtifact(input: IntakeInput, diagnosis: DiagnosisProfil
   const contentBoundaryProfile = buildContentBoundaryProfile(input, diagnosis, operatingRules);
   const styleCard = buildStyleCard(input, diagnosis);
   const sourceMap = buildSourceMap(input, diagnosis);
+  const northStar = `让 AI 按统一规则稳定协作，围绕“${input.goal || "高质量完成关键任务"}”持续复利。`;
+  const draftContextBundle = buildDraftContextBundle({
+    northStar,
+    contentOpsProfile,
+    contentBoundaryProfile,
+    styleCard,
+    sourceMap,
+  });
 
   const clientProfiles = [
     {
@@ -1090,6 +1191,14 @@ export function buildAiOsArtifact(input: IntakeInput, diagnosis: DiagnosisProfil
     {
       path: "AI-OS/contentops/source-map.json",
       purpose: "给 ContentOps 或其他下游系统直接消费的结构化素材来源数据。",
+    },
+    {
+      path: "AI-OS/contentops/draft-context.md",
+      purpose: "给 ContentOps 母稿生成前读取的联动上下文包说明。",
+    },
+    {
+      path: "AI-OS/contentops/draft-context.json",
+      purpose: "给 ContentOps 或其他下游系统直接消费的结构化母稿上下文包。",
     },
     {
       path: "AI-OS/rules.md",
@@ -1363,6 +1472,35 @@ ${sourceMap.contentOpsUse.fallbackPlan.map((item) => `- Fallback: ${item}`).join
 
 ## Mapping Notes
 ${sourceMap.mappingNotes
+  .map((item) => `### ${item.targetField}\n- Derived From: ${item.derivedFrom.join(", ")}\n- Rationale: ${item.rationale}`)
+  .join("\n\n")}
+`;
+
+  const draftContextContent = `# Draft Context Bundle
+
+## Bundle Version
+${draftContextBundle.bundleVersion}
+
+## Summary
+${draftContextBundle.summary}
+
+## Draft Inputs
+- Positioning: ${draftContextBundle.draftInputs.positioning}
+- Audience: ${draftContextBundle.draftInputs.audience}
+${draftContextBundle.draftInputs.contentPillars.map((item) => `- Content Pillar: ${item}`).join("\n")}
+${draftContextBundle.draftInputs.hardStops.map((item) => `- Hard Stop: ${item}`).join("\n")}
+${draftContextBundle.draftInputs.styleTone.map((item) => `- Style Tone: ${item}`).join("\n")}
+${draftContextBundle.draftInputs.preferredFormats.map((item) => `- Preferred Format: ${item}`).join("\n")}
+${draftContextBundle.draftInputs.preDraftSources.map((item) => `- Pre-Draft Source: ${item}`).join("\n")}
+
+## Draft Flow
+${draftContextBundle.draftFlow.map((item) => `- ${item}`).join("\n")}
+
+## Review Checklist
+${draftContextBundle.reviewChecklist.map((item) => `- ${item}`).join("\n")}
+
+## Mapping Notes
+${draftContextBundle.mappingNotes
   .map((item) => `### ${item.targetField}\n- Derived From: ${item.derivedFrom.join(", ")}\n- Rationale: ${item.rationale}`)
   .join("\n\n")}
 `;
@@ -1877,6 +2015,16 @@ Instructions:
       content: `${JSON.stringify(sourceMap, null, 2)}\n`,
     },
     {
+      path: "AI-OS/contentops/draft-context.md",
+      purpose: "给 ContentOps 母稿生成前读取的联动上下文包说明。",
+      content: draftContextContent,
+    },
+    {
+      path: "AI-OS/contentops/draft-context.json",
+      purpose: "给 ContentOps 或其他下游系统直接消费的结构化母稿上下文包。",
+      content: `${JSON.stringify(draftContextBundle, null, 2)}\n`,
+    },
+    {
       path: "AI-OS/rules.md",
       purpose: "记录统一规则、权限等级、验证要求和禁止事项。",
       content: rulesContent,
@@ -2010,11 +2158,12 @@ Instructions:
 
   return {
     workspaceName,
-    northStar: `让 AI 按统一规则稳定协作，围绕“${input.goal || "高质量完成关键任务"}”持续复利。`,
+    northStar,
     contentOpsProfile,
     contentBoundaryProfile,
     styleCard,
     sourceMap,
+    draftContextBundle,
     operatingRules,
     clientProfiles,
     starterFiles,

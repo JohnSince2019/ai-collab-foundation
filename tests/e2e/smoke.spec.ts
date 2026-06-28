@@ -60,6 +60,8 @@ test("home and key flows render", async ({ page }) => {
   await expect(page.getByText("AI-OS/contentops/style-card.json").first()).toBeVisible();
   await expect(page.getByText("AI-OS/contentops/source-map.md").first()).toBeVisible();
   await expect(page.getByText("AI-OS/contentops/source-map.json").first()).toBeVisible();
+  await expect(page.getByText("AI-OS/contentops/draft-context.md").first()).toBeVisible();
+  await expect(page.getByText("AI-OS/contentops/draft-context.json").first()).toBeVisible();
   await expect(page.getByText("AI-OS/install/target-locations.md").first()).toBeVisible();
   await expect(page.getByText("AI-OS/install/verification-checklist.md").first()).toBeVisible();
   await expect(page.getByText("ContentOps Profile 映射")).toBeVisible();
@@ -70,6 +72,8 @@ test("home and key flows render", async ({ page }) => {
   await expect(page.getByText("Style 字段说明")).toBeVisible();
   await expect(page.getByText("Source Map", { exact: true })).toBeVisible();
   await expect(page.getByText("Source 字段说明")).toBeVisible();
+  await expect(page.getByText("Draft Context Bundle", { exact: true })).toBeVisible();
+  await expect(page.getByText("Draft Context 字段说明")).toBeVisible();
   await expect(page.getByText("定位陈述", { exact: true })).toBeVisible();
   await expect(page.getByText("目标受众", { exact: true })).toBeVisible();
   await expect(page.getByText("核心话题与内容支柱", { exact: true })).toBeVisible();
@@ -85,6 +89,10 @@ test("home and key flows render", async ({ page }) => {
   await expect(page.getByText("Pre-Draft Sources", { exact: true })).toBeVisible();
   await expect(page.getByText("Fallback Plan", { exact: true })).toBeVisible();
   await expect(page.getByText("contentOpsUse.preDraftSources", { exact: true })).toBeVisible();
+  await expect(page.getByText("Draft Inputs", { exact: true })).toBeVisible();
+  await expect(page.getByText("Draft Flow", { exact: true })).toBeVisible();
+  await expect(page.getByText("Review Checklist", { exact: true })).toBeVisible();
+  await expect(page.getByText("draftInputs.*", { exact: true })).toBeVisible();
   await expect(page.getByText("本地环境检测")).toBeVisible();
   await expect(page.getByText("已有规则识别与冲突扫描")).toBeVisible();
   await expect(page.getByText("配置 diff 预览与合并建议")).toBeVisible();
@@ -124,6 +132,7 @@ test("home and key flows render", async ({ page }) => {
   await expect(page.getByText("# Content Boundaries").first()).toBeVisible();
   await expect(page.getByText("# Style Card")).toBeVisible();
   await expect(page.getByText("# Source Map")).toBeVisible();
+  await expect(page.getByText("# Draft Context Bundle")).toBeVisible();
   await expect(page.getByText("# Claude Code Client Profile")).toBeVisible();
   await expect(page.getByText("# Adapter Setup Guide")).toBeVisible();
   await expect(page.getByText("# MCP Selection").last()).toBeVisible();
