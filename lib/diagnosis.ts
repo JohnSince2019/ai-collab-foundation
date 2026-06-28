@@ -159,12 +159,39 @@ export type StyleCard = {
   }>;
 };
 
+export type SourceMap = {
+  sourceMapVersion: string;
+  source: {
+    clients: string;
+    tasks: string;
+    selectedMcp: string[];
+    workflowTemplates: string[];
+  };
+  categories: Array<{
+    name: string;
+    summary: string;
+    examples: string[];
+    readiness: "ready" | "optional" | "later";
+  }>;
+  priorityOrder: string[];
+  contentOpsUse: {
+    preDraftSources: string[];
+    fallbackPlan: string[];
+  };
+  mappingNotes: Array<{
+    targetField: string;
+    derivedFrom: string[];
+    rationale: string;
+  }>;
+};
+
 export type AiOsArtifact = {
   workspaceName: string;
   northStar: string;
   contentOpsProfile: ContentOpsProfile;
   contentBoundaryProfile: ContentBoundaryProfile;
   styleCard: StyleCard;
+  sourceMap: SourceMap;
   operatingRules: string[];
   clientProfiles: Array<{
     name: string;
@@ -864,6 +891,126 @@ export function buildStyleCard(input: IntakeInput, diagnosis: DiagnosisProfile):
   };
 }
 
+export function buildSourceMap(input: IntakeInput, diagnosis: DiagnosisProfile): SourceMap {
+  const selectedMcp = diagnosis.mcpPlan.selected;
+  const taskCorpus = `${input.tasks} ${input.goal}`.toLowerCase();
+  const clientItems = input.clients
+    .split(/[、,，/]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  const categories: SourceMap["categories"] = [
+    {
+      name: "用户直接输入",
+      summary: "来自 onboarding 和 diagnosis 的目标、角色、高频任务与风险顾虑，是当前最稳定的第一手来源。",
+      examples: [
+        input.goal || "当前目标",
+        input.tasks || "高频任务",
+        input.role || diagnosis.roleLabel,
+      ].filter(Boolean),
+      readiness: "ready",
+    },
+    {
+      name: "AI-OS 共享规则层",
+      summary: "来自 identity、rules、workflows、profile、boundaries、style-card 的共享上下文，可直接参与内容生成。",
+      examples: [
+        "AI-OS/identity.md",
+        "AI-OS/rules.md",
+        "AI-OS/contentops/profile.json",
+        "AI-OS/contentops/style-card.json",
+      ],
+      readiness: "ready",
+    },
+    {
+      name: "项目与任务系统",
+      summary: "来自 Linear、PRD、roadmap、本地 docs/linear 等执行上下文，适合支撑主题选择、进度复盘和案例素材。",
+      examples: selectedMcp.includes("Linear MCP")
+        ? ["Linear MCP", "docs/linear/current-execution-status.md", "PRD / roadmap"]
+        : ["docs/linear/current-execution-status.md", "PRD / roadmap"],
+      readiness: selectedMcp.includes("Linear MCP") ? "ready" : "optional",
+    },
+    {
+      name: "知识与资料库",
+      summary: "来自 SOP、README、知识索引或文档库，适合作为稳定背景资料与可引用素材源。",
+      examples: selectedMcp.includes("Knowledge Index MCP")
+        ? ["Knowledge Index MCP", "PROJECT-SOP.md", "README.md"]
+        : ["PROJECT-SOP.md", "README.md", "本地 docs/"],
+      readiness: selectedMcp.includes("Knowledge Index MCP") ? "ready" : "optional",
+    },
+    {
+      name: "设计与表现参考",
+      summary: "当任务涉及 UI、视觉、包装或表达风格时，可接入设计参考源作为补充素材。",
+      examples: ["Mobbin 参考图", "设计截图", "Design Reference MCP"],
+      readiness: includesAny(taskCorpus, ["ui", "设计", "视觉", "包装", "风格"]) ? "optional" : "later",
+    },
+    {
+      name: "数据与外部事实源",
+      summary: "当任务需要真实指标、数据库或发布表现时，再接入只读数据源作为高级素材层。",
+      examples: ["Database MCP", "只读报表", "人工整理数据摘要"],
+      readiness: includesAny(taskCorpus, ["数据", "指标", "表现", "复盘"]) ? "optional" : "later",
+    },
+  ];
+
+  const priorityOrder = [
+    "用户直接输入",
+    "AI-OS 共享规则层",
+    "项目与任务系统",
+    "知识与资料库",
+    "设计与表现参考",
+    "数据与外部事实源",
+  ];
+
+  const preDraftSources = uniqueStrings([
+    "先读取 AI-OS/contentops/profile.json、boundaries.json、style-card.json",
+    "再补充当前任务相关的 PRD、Linear issue 或 docs/linear 证据",
+    selectedMcp.includes("Knowledge Index MCP") ? "如需背景资料，再读 Knowledge Index MCP 或本地文档库" : "如需背景资料，先读 PROJECT-SOP.md、README.md 和本地 docs/",
+  ]);
+
+  const fallbackPlan = uniqueStrings([
+    "即使没有任何 MCP，也可以先用 AI-OS 共享规则层 + 本地文档完成内容生成。",
+    "缺少结构化知识源时，优先用 PRD、SOP、README 和任务文档替代。",
+    "缺少数据或设计来源时，不伪造素材，明确标注为待补充来源。",
+  ]);
+
+  return {
+    sourceMapVersion: "v0.1.0",
+    source: {
+      clients: input.clients,
+      tasks: input.tasks,
+      selectedMcp,
+      workflowTemplates: [...diagnosis.workflowTemplates],
+    },
+    categories,
+    priorityOrder,
+    contentOpsUse: {
+      preDraftSources,
+      fallbackPlan,
+    },
+    mappingNotes: [
+      {
+        targetField: "categories",
+        derivedFrom: ["clients", "tasks", "selectedMcp", "workflowTemplates"],
+        rationale: "用当前工作流、MCP 选择和任务语义推断最可能反复使用的素材来源类别。",
+      },
+      {
+        targetField: "priorityOrder",
+        derivedFrom: ["渐进式增强原则", "现有输入稳定性"],
+        rationale: "优先使用最稳定、最低依赖、当前已具备的来源，再逐步接入更重的外部源。",
+      },
+      {
+        targetField: "contentOpsUse.preDraftSources",
+        derivedFrom: ["profile", "boundaries", "style-card", "project docs"],
+        rationale: "明确母稿生成前应该先吃哪些上游上下文，避免只靠单一 prompt 临时发挥。",
+      },
+      {
+        targetField: "contentOpsUse.fallbackPlan",
+        derivedFrom: ["selectedMcp", "local docs", "risk boundaries"],
+        rationale: "保证没有 MCP 或外部源时，系统仍然能用本地可验证资料继续工作，而不是编造来源。",
+      },
+    ],
+  };
+}
+
 export function buildAiOsArtifact(input: IntakeInput, diagnosis: DiagnosisProfile): AiOsArtifact {
   const primaryClient = diagnosis.recommendedClients[0]?.name ?? "Codex + GPT-5 系列";
   const secondaryClient = diagnosis.recommendedClients[1]?.name ?? "Claude Code";
@@ -887,6 +1034,7 @@ export function buildAiOsArtifact(input: IntakeInput, diagnosis: DiagnosisProfil
   const contentOpsProfile = buildContentOpsProfile(input, diagnosis);
   const contentBoundaryProfile = buildContentBoundaryProfile(input, diagnosis, operatingRules);
   const styleCard = buildStyleCard(input, diagnosis);
+  const sourceMap = buildSourceMap(input, diagnosis);
 
   const clientProfiles = [
     {
@@ -934,6 +1082,14 @@ export function buildAiOsArtifact(input: IntakeInput, diagnosis: DiagnosisProfil
     {
       path: "AI-OS/contentops/style-card.json",
       purpose: "给 ContentOps 或其他下游系统直接消费的结构化风格卡数据。",
+    },
+    {
+      path: "AI-OS/contentops/source-map.md",
+      purpose: "给 ContentOps 读取的结构化高频素材来源映射。",
+    },
+    {
+      path: "AI-OS/contentops/source-map.json",
+      purpose: "给 ContentOps 或其他下游系统直接消费的结构化素材来源数据。",
     },
     {
       path: "AI-OS/rules.md",
@@ -1184,6 +1340,29 @@ ${styleCard.contentOpsUse.reviewHints.map((item) => `- Review Hint: ${item}`).jo
 
 ## Mapping Notes
 ${styleCard.mappingNotes
+  .map((item) => `### ${item.targetField}\n- Derived From: ${item.derivedFrom.join(", ")}\n- Rationale: ${item.rationale}`)
+  .join("\n\n")}
+`;
+
+  const sourceMapContent = `# Source Map
+
+## Source Map Version
+${sourceMap.sourceMapVersion}
+
+## Categories
+${sourceMap.categories
+  .map((item) => `### ${item.name}\n- Readiness: ${item.readiness}\n- Summary: ${item.summary}\n${item.examples.map((example) => `- Example: ${example}`).join("\n")}`)
+  .join("\n\n")}
+
+## Priority Order
+${sourceMap.priorityOrder.map((item) => `- ${item}`).join("\n")}
+
+## ContentOps Use
+${sourceMap.contentOpsUse.preDraftSources.map((item) => `- Pre-Draft: ${item}`).join("\n")}
+${sourceMap.contentOpsUse.fallbackPlan.map((item) => `- Fallback: ${item}`).join("\n")}
+
+## Mapping Notes
+${sourceMap.mappingNotes
   .map((item) => `### ${item.targetField}\n- Derived From: ${item.derivedFrom.join(", ")}\n- Rationale: ${item.rationale}`)
   .join("\n\n")}
 `;
@@ -1688,6 +1867,16 @@ Instructions:
       content: `${JSON.stringify(styleCard, null, 2)}\n`,
     },
     {
+      path: "AI-OS/contentops/source-map.md",
+      purpose: "给 ContentOps 读取的结构化高频素材来源映射。",
+      content: sourceMapContent,
+    },
+    {
+      path: "AI-OS/contentops/source-map.json",
+      purpose: "给 ContentOps 或其他下游系统直接消费的结构化素材来源数据。",
+      content: `${JSON.stringify(sourceMap, null, 2)}\n`,
+    },
+    {
       path: "AI-OS/rules.md",
       purpose: "记录统一规则、权限等级、验证要求和禁止事项。",
       content: rulesContent,
@@ -1825,6 +2014,7 @@ Instructions:
     contentOpsProfile,
     contentBoundaryProfile,
     styleCard,
+    sourceMap,
     operatingRules,
     clientProfiles,
     starterFiles,

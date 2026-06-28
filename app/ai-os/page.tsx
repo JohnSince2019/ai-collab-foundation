@@ -386,6 +386,69 @@ export default async function AiOsPage({
         <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
           <Card className="px-6 py-6 md:px-8">
             <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+              <BookOpenText className="h-4 w-4 text-emerald-600" />
+              Source Map
+            </div>
+            <div className="mt-5 space-y-3">
+              {artifact.sourceMap.categories.map((item) => (
+                <div key={item.name} className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="text-sm font-semibold text-slate-900">{item.name}</div>
+                    <Pill active={item.readiness === "ready"}>
+                      {item.readiness === "ready" ? "ready" : item.readiness === "optional" ? "optional" : "later"}
+                    </Pill>
+                  </div>
+                  <div className="mt-2 text-sm leading-6 text-slate-600">{item.summary}</div>
+                  <div className="mt-3 space-y-1">
+                    {item.examples.map((example) => (
+                      <div key={example} className="text-sm leading-6 text-slate-500">{example}</div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <Card className="px-6 py-6 md:px-8">
+            <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+              <FolderTree className="h-4 w-4 text-emerald-600" />
+              Source 字段说明
+            </div>
+            <div className="mt-5 space-y-3">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                <div className="text-sm font-semibold text-slate-900">Pre-Draft Sources</div>
+                <div className="mt-3 space-y-2">
+                  {artifact.sourceMap.contentOpsUse.preDraftSources.map((item) => (
+                    <div key={item} className="text-sm leading-6 text-slate-600">{item}</div>
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
+                <div className="text-sm font-semibold text-slate-900">Fallback Plan</div>
+                <div className="mt-3 space-y-2">
+                  {artifact.sourceMap.contentOpsUse.fallbackPlan.map((item) => (
+                    <div key={item} className="text-sm leading-6 text-slate-600">{item}</div>
+                  ))}
+                </div>
+              </div>
+              {artifact.sourceMap.mappingNotes.map((item) => (
+                <div key={item.targetField} className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
+                  <div className="text-sm font-semibold text-slate-900">{item.targetField}</div>
+                  <div className="mt-1 text-sm leading-6 text-slate-500">
+                    来源：
+                    {" "}
+                    {item.derivedFrom.join(" / ")}
+                  </div>
+                  <div className="mt-2 text-sm leading-6 text-slate-600">{item.rationale}</div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+
+        <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+          <Card className="px-6 py-6 md:px-8">
+            <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
               <BookOpenText className="h-4 w-4 text-sky-600" />
               客户端角色分工
             </div>
