@@ -47,4 +47,8 @@
   1. `draft-context` 是否足以代表 ContentOps 在母稿前真正需要的上游上下文
   2. `mother-draft-prompt` 是否已经达到可直接给下游 LLM 生成母稿的质量门槛
   3. `mother-draft-sample` 是否至少体现了“结构正确、方向正确、缺失证据被如实标注”
+- Codex 代理评估：
+  - `draft-context` -> 通过
+  - `mother-draft-prompt` -> 通过
+  - `mother-draft-sample` -> 通过（但仍缺真实 ContentOps 消费后的业务效果证明）
 - 关联本地 docs/linear 文件：`m4-linear-seeding-pack.md` `current-execution-status.md`
