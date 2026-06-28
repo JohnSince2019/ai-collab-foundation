@@ -26,6 +26,9 @@ export default async function DiagnosisPage({
 
   const diagnosis = buildDiagnosis(intake);
   const configureHref = `/configure?role=${encodeURIComponent(intake.role)}&goal=${encodeURIComponent(intake.goal)}`;
+  const aiOsHref = `/ai-os?role=${encodeURIComponent(intake.role)}&goal=${encodeURIComponent(intake.goal)}&clients=${encodeURIComponent(
+    intake.clients,
+  )}&tasks=${encodeURIComponent(intake.tasks)}&concerns=${encodeURIComponent(intake.concerns)}`;
 
   return (
     <Shell className="pb-12">
@@ -123,6 +126,12 @@ export default async function DiagnosisPage({
                   进入配置流程
                   <ArrowRight className="h-4 w-4" />
                 </PrimaryButton>
+              </Link>
+              <Link
+                href={aiOsHref}
+                className="inline-flex items-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700"
+              >
+                直接查看 AI-OS 输出
               </Link>
               <Link
                 href="/onboarding"

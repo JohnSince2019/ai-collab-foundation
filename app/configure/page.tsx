@@ -25,6 +25,12 @@ export default async function ConfigurePage({
   const params = await searchParams;
   const role = getFirst(params.role);
   const goal = getFirst(params.goal);
+  const clients = getFirst(params.clients);
+  const tasks = getFirst(params.tasks);
+  const concerns = getFirst(params.concerns);
+  const aiOsHref = `/ai-os?role=${encodeURIComponent(role)}&goal=${encodeURIComponent(goal)}&clients=${encodeURIComponent(
+    clients,
+  )}&tasks=${encodeURIComponent(tasks)}&concerns=${encodeURIComponent(concerns)}`;
 
   return (
     <Shell className="pb-12">
@@ -161,10 +167,12 @@ export default async function ConfigurePage({
                   <Link href="/diagnosis">
                     <SecondaryButton>返回诊断</SecondaryButton>
                   </Link>
-                  <PrimaryButton>
-                    继续生成 AI-OS
-                    <ArrowRight className="h-4 w-4" />
-                  </PrimaryButton>
+                  <Link href={aiOsHref}>
+                    <PrimaryButton>
+                      继续生成 AI-OS
+                      <ArrowRight className="h-4 w-4" />
+                    </PrimaryButton>
+                  </Link>
                 </div>
               </div>
             </Card>

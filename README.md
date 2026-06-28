@@ -27,12 +27,13 @@
 - Next.js 产品骨架已初始化
 - 首页、onboarding、configuration 首版页面已落地
 - onboarding -> diagnosis -> configuration 首版流程已打通
+- AI-OS 结构化输出页已落地
 - 本地类型检查与生产构建已通过
 
 下一步优先级：
 
 1. 建立 Linear 项目与 milestones / issues
-2. 将首版 UI 与真实输入表单、结果页、AI-OS 输出继续串起来
+2. 将首版 UI 与真实输入表单、结果页、AI-OS 输出继续增强
 3. 启动 `M1` 深化实现：
    - AI 工作流诊断结果页增强
    - 推荐客户端组合逻辑增强

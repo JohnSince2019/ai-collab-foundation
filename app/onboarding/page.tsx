@@ -13,7 +13,24 @@ import {
   TopNav,
 } from "@/components/ui";
 
-export default function OnboardingPage() {
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+function getFirst(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] ?? "" : value ?? "";
+}
+
+export default async function OnboardingPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const params = await searchParams;
+  const role = getFirst(params.role);
+  const goal = getFirst(params.goal);
+  const clients = getFirst(params.clients);
+  const tasks = getFirst(params.tasks);
+  const concerns = getFirst(params.concerns);
+
   return (
     <Shell>
       <TopNav />
@@ -52,6 +69,7 @@ export default function OnboardingPage() {
                 <InputField
                   name="role"
                   required
+                  defaultValue={role}
                   label="你是谁"
                   placeholder="例如：独立开发者 / 内容创作者 / 技术经理"
                   helper="决定推荐客户端、工作流模板和默认交付链路。"
@@ -59,6 +77,7 @@ export default function OnboardingPage() {
                 <InputField
                   name="goal"
                   required
+                  defaultValue={goal}
                   label="你最重要的目标"
                   placeholder="例如：建立稳定 AI 写作和产品开发协作流程"
                   helper="先记录接下来 3-6 个月最想达成的目标。"
@@ -66,6 +85,7 @@ export default function OnboardingPage() {
                 <InputField
                   name="clients"
                   required
+                  defaultValue={clients}
                   label="你常用哪些 AI 客户端"
                   placeholder="例如：Codex、ChatGPT、Cursor、Claude Code"
                   helper="系统会据此给出主力组合与替补矩阵。"
@@ -73,6 +93,7 @@ export default function OnboardingPage() {
                 <TextareaField
                   name="tasks"
                   required
+                  defaultValue={tasks}
                   label="你最常让 AI 帮你做什么"
                   placeholder="例如：写 PRD、拆需求、改代码、内容策划、研究分析、复盘总结。"
                   helper="这里会直接影响生成的高频工作流模板。"
@@ -80,6 +101,7 @@ export default function OnboardingPage() {
                 <TextareaField
                   name="concerns"
                   required
+                  defaultValue={concerns}
                   label="你最担心 AI 出什么问题"
                   placeholder="例如：乱改文件、误删、上下文不一致、风格跑偏、做完但没验证。"
                   helper="这些担忧会进入默认权限和确认机制。"

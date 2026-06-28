@@ -22,6 +22,23 @@ export type DiagnosisProfile = {
   recommendedMcp: McpOption[];
 };
 
+export type AiOsArtifact = {
+  workspaceName: string;
+  northStar: string;
+  operatingRules: string[];
+  clientProfiles: Array<{
+    name: string;
+    mission: string;
+    usage: string;
+  }>;
+  starterFiles: Array<{
+    path: string;
+    purpose: string;
+  }>;
+  memoryLoop: string[];
+  firstActions: string[];
+};
+
 function includesAny(source: string, terms: string[]) {
   return terms.some((term) => source.includes(term));
 }
@@ -104,5 +121,90 @@ export function buildDiagnosis(input: IntakeInput): DiagnosisProfile {
     workflowTemplates,
     recommendedClients: clientRanking,
     recommendedMcp: mcpRanking,
+  };
+}
+
+export function buildAiOsArtifact(input: IntakeInput, diagnosis: DiagnosisProfile): AiOsArtifact {
+  const primaryClient = diagnosis.recommendedClients[0]?.name ?? "Codex + GPT-5 系列";
+  const secondaryClient = diagnosis.recommendedClients[1]?.name ?? "Claude Code";
+  const workspaceName = input.goal
+    ? `${input.goal.replace(/[。！？!?,，]/g, "").slice(0, 24)} AI-OS`
+    : "Personal AI-OS";
+
+  const operatingRules = [
+    "所有客户端共享同一套目标、角色、任务边界与输出标准。",
+    "高风险动作默认人工确认，先保守授权，再逐步放开。",
+    "每次关键任务结束后，把有效规则沉淀回 AI-OS，而不是留在聊天记录里。",
+    "新项目与新功能默认继承这套规则，而不是重新从 prompt 开始。",
+  ];
+
+  if (input.concerns) {
+    operatingRules.push(`风险优先级：重点防止 ${input.concerns}。`);
+  }
+
+  const clientProfiles = [
+    {
+      name: primaryClient,
+      mission: "作为主力执行客户端，负责文档驱动任务、交付推进、验证与结果落地。",
+      usage: "适合长任务、文件修改、工作流编排、端到端交付。",
+    },
+    {
+      name: secondaryClient,
+      mission: "作为辅助分析客户端，负责思路梳理、复杂解释、备选方案讨论。",
+      usage: "适合研究、复盘、对比方案、长文本理解。",
+    },
+    {
+      name: "ChatGPT / 通用对话层",
+      mission: "作为轻量即时协作层，承接快速问答、草稿生成与碎片思考。",
+      usage: "适合轻量提问、快速试探、移动端即时记录。",
+    },
+  ];
+
+  const starterFiles = [
+    {
+      path: "AI-OS/identity.md",
+      purpose: "记录你的角色、目标、工作方式和协作边界。",
+    },
+    {
+      path: "AI-OS/rules.md",
+      purpose: "记录统一规则、权限等级、验证要求和禁止事项。",
+    },
+    {
+      path: "AI-OS/workflows.md",
+      purpose: "记录高频任务模板、交付步骤、复盘结构和默认输出。",
+    },
+    {
+      path: "AI-OS/clients/codex.md",
+      purpose: "记录 Codex / 主力客户端的执行偏好和项目默认链路。",
+    },
+    {
+      path: "AI-OS/memory/decisions.md",
+      purpose: "沉淀关键决策、例外情况和后续沿用规则。",
+    },
+  ];
+
+  const memoryLoop = [
+    "任务前：读取 AI-OS 规则与相关工作流模板。",
+    "任务中：记录新的约束、例外和有效做法。",
+    "任务后：将可复用经验写回 decisions / workflows / rules。",
+    "新项目启动时：默认加载上一轮沉淀后的 AI-OS。",
+  ];
+
+  const firstActions = [
+    `确认主力客户端：${primaryClient}`,
+    `确认默认目标：${input.goal || "建立统一 AI 协作系统"}`,
+    "创建 AI-OS 目录骨架并写入 identity / rules / workflows",
+    "接入 1-2 个最高价值 MCP，而不是一次接满",
+    "选择一个高频任务做首轮闭环验证",
+  ];
+
+  return {
+    workspaceName,
+    northStar: `让 AI 按统一规则稳定协作，围绕“${input.goal || "高质量完成关键任务"}”持续复利。`,
+    operatingRules,
+    clientProfiles,
+    starterFiles,
+    memoryLoop,
+    firstActions,
   };
 }

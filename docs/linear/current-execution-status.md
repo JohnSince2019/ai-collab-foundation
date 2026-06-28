@@ -19,6 +19,7 @@
 - Next.js 技术骨架已初始化
 - 首页、`/onboarding`、`/configure` 首版页面已实现
 - `onboarding -> diagnosis -> configure` MVP 主链路已实现
+- `AI-OS` 结构化输出页已实现
 - `npm run typecheck` 已通过
 - `npm run build` 已通过
 
@@ -47,7 +48,7 @@
 - [x] 技术骨架已初始化
 - [x] 首版诊断表单已接入真实状态
 - [x] 首版结果页已接入真实生成逻辑
-- [ ] AI-OS 结构化输出页已实现
+- [x] AI-OS 结构化输出页已实现
 
 ## 5. 下一步建议
 
@@ -55,6 +56,6 @@
 
 1. 建立 `M1` milestones / issues
 2. 为第一个 issue 补齐 Business / Technical / AC / Test Plan / Evidence
-3. 实现 `AI-OS` 结构化输出页
-4. 增强推荐矩阵、MCP 勾选与权限配置逻辑
+3. 增强推荐矩阵、MCP 勾选与权限配置逻辑
+4. 生成客户端适配文件与 AI-OS 目录内容
 5. 增加 Playwright 页面截图与关键流程验收证据
