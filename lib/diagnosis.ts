@@ -95,10 +95,40 @@ export type ContentOpsProfile = {
   }>;
 };
 
+export type ContentBoundaryProfile = {
+  boundaryVersion: string;
+  source: {
+    concerns: string;
+    permissionMode: string;
+    actionBoundaries: Array<{
+      type: string;
+      confirmation: string;
+      examples: string;
+    }>;
+    operatingRules: string[];
+  };
+  boundaries: {
+    hardStops: string[];
+    reviewRequired: string[];
+    preferredGuardrails: string[];
+    disallowedClaims: string[];
+  };
+  injectionTargets: Array<{
+    target: string;
+    purpose: string;
+  }>;
+  mappingNotes: Array<{
+    targetField: string;
+    derivedFrom: string[];
+    rationale: string;
+  }>;
+};
+
 export type AiOsArtifact = {
   workspaceName: string;
   northStar: string;
   contentOpsProfile: ContentOpsProfile;
+  contentBoundaryProfile: ContentBoundaryProfile;
   operatingRules: string[];
   clientProfiles: Array<{
     name: string;
@@ -588,10 +618,103 @@ export function buildDiagnosis(input: IntakeInput): DiagnosisProfile {
   };
 }
 
+export function buildContentBoundaryProfile(
+  input: IntakeInput,
+  diagnosis: DiagnosisProfile,
+  operatingRules: string[],
+): ContentBoundaryProfile {
+  const concernItems = uniqueStrings(
+    (input.concerns || diagnosis.bottleneck)
+      .split(/[，,、]/)
+      .map((item) => item.trim())
+      .filter(Boolean),
+  );
+
+  const hardStops = uniqueStrings([
+    "不要在未确认前执行真实世界动作、发布、删除、付款或外部写入。",
+    "不要把未验证内容声明为已完成、已正确或可直接发布。",
+    ...concernItems.map((item) => `重点避免：${item}`),
+  ]);
+
+  const reviewRequired = uniqueStrings([
+    "涉及高风险动作、跨系统写入、公开发布或不可逆操作时，必须人工复核。",
+    "当内容可能偏离角色定位、目标受众或任务目标时，先回到 Profile 重新对齐。",
+    "当输出引用事实、结论或建议时，需要做来源与边界检查。",
+  ]);
+
+  const preferredGuardrails = uniqueStrings([
+    diagnosis.permissionMode,
+    "先读 ContentOps Profile，再生成内容母稿。",
+    "先明确内容边界，再展开标题、提纲和正文。",
+    "把风险顾虑前置成生成约束，而不是在产出后补救。",
+  ]);
+
+  const disallowedClaims = [
+    "禁止跳过验证直接宣称内容可发布。",
+    "禁止擅自扩展到用户没有授权的立场、承诺或事实判断。",
+    "禁止忽略用户已经明确表达的风险顾虑和权限边界。",
+  ];
+
+  return {
+    boundaryVersion: "v0.1.0",
+    source: {
+      concerns: input.concerns,
+      permissionMode: diagnosis.permissionMode,
+      actionBoundaries: diagnosis.permissionPlan.actionBoundaries.map((item) => ({ ...item })),
+      operatingRules,
+    },
+    boundaries: {
+      hardStops,
+      reviewRequired,
+      preferredGuardrails,
+      disallowedClaims,
+    },
+    injectionTargets: [
+      {
+        target: "AI-OS/rules.md",
+        purpose: "把内容边界注入统一规则层，确保所有客户端共享相同约束。",
+      },
+      {
+        target: "AI-OS/contentops/boundaries.md",
+        purpose: "给 ContentOps 在母稿生成前读取内容边界与审核要求。",
+      },
+      {
+        target: "AI-OS/contentops/boundaries.json",
+        purpose: "给下游系统直接消费结构化边界对象。",
+      },
+      {
+        target: "AI-OS/contentops/profile.json",
+        purpose: "让 ContentOps Profile 与 Boundary 在同一上下文层联动使用。",
+      },
+    ],
+    mappingNotes: [
+      {
+        targetField: "boundaries.hardStops",
+        derivedFrom: ["concerns", "permissionMode"],
+        rationale: "把用户明确担心的错误和高风险动作整理为生成阶段不能越过的硬边界。",
+      },
+      {
+        targetField: "boundaries.reviewRequired",
+        derivedFrom: ["actionBoundaries", "permissionMode"],
+        rationale: "把本地动作、真实世界动作和外部系统动作的确认要求转译成内容生成前置审核条件。",
+      },
+      {
+        targetField: "boundaries.preferredGuardrails",
+        derivedFrom: ["operatingRules", "permissionMode", "concerns"],
+        rationale: "把通用规则和风险偏好转成更适合 ContentOps 消费的内容约束语句。",
+      },
+      {
+        targetField: "injectionTargets",
+        derivedFrom: ["rules.md", "contentops/*"],
+        rationale: "明确哪些文件承担全局共享约束，哪些文件承担下游内容生成的直接输入。",
+      },
+    ],
+  };
+}
+
 export function buildAiOsArtifact(input: IntakeInput, diagnosis: DiagnosisProfile): AiOsArtifact {
   const primaryClient = diagnosis.recommendedClients[0]?.name ?? "Codex + GPT-5 系列";
   const secondaryClient = diagnosis.recommendedClients[1]?.name ?? "Claude Code";
-  const contentOpsProfile = buildContentOpsProfile(input, diagnosis);
   const workspaceName = input.goal
     ? `${input.goal.replace(/[。！？!?,，]/g, "").slice(0, 24)} AI-OS`
     : "Personal AI-OS";
@@ -609,6 +732,8 @@ export function buildAiOsArtifact(input: IntakeInput, diagnosis: DiagnosisProfil
   operatingRules.push(`GPT Token 状态：${diagnosis.tokenPlan.label}。${diagnosis.tokenPlan.riskBoundary}`);
   operatingRules.push(`MCP 策略：${diagnosis.mcpPlan.selectionSummary}`);
   operatingRules.push(`权限起点：${diagnosis.permissionPlan.startMode.label}。${diagnosis.permissionPlan.startMode.summary}`);
+  const contentOpsProfile = buildContentOpsProfile(input, diagnosis);
+  const contentBoundaryProfile = buildContentBoundaryProfile(input, diagnosis, operatingRules);
 
   const clientProfiles = [
     {
@@ -640,6 +765,14 @@ export function buildAiOsArtifact(input: IntakeInput, diagnosis: DiagnosisProfil
     {
       path: "AI-OS/contentops/profile.json",
       purpose: "给 ContentOps 或其他下游系统直接消费的结构化 Profile 数据。",
+    },
+    {
+      path: "AI-OS/contentops/boundaries.md",
+      purpose: "给 ContentOps 读取的结构化内容边界与审核约束。",
+    },
+    {
+      path: "AI-OS/contentops/boundaries.json",
+      purpose: "给 ContentOps 或其他下游系统直接消费的结构化内容边界数据。",
     },
     {
       path: "AI-OS/rules.md",
@@ -798,6 +931,11 @@ ${diagnosis.permissionPlan.modes.map((item) => `- ${item.label}：${item.summary
 ## Confirmation Boundaries
 ${diagnosis.permissionPlan.actionBoundaries.map((item) => `- ${item.type}：${item.confirmation}`).join("\n")}
 
+## Content Boundaries
+${contentBoundaryProfile.boundaries.hardStops.map((item) => `- Hard Stop：${item}`).join("\n")}
+${contentBoundaryProfile.boundaries.reviewRequired.map((item) => `- Review Required：${item}`).join("\n")}
+${contentBoundaryProfile.boundaries.preferredGuardrails.map((item) => `- Guardrail：${item}`).join("\n")}
+
 ## Verification Standard
 - Important tasks should include result checking, not just "no local error"
 - New projects inherit these rules by default
@@ -830,6 +968,32 @@ ${contentOpsProfile.execution.riskFocus.map((item) => `- Risk Focus: ${item}`).j
 
 ## Mapping Notes
 ${contentOpsProfile.mappingNotes
+  .map((item) => `### ${item.targetField}\n- Derived From: ${item.derivedFrom.join(", ")}\n- Rationale: ${item.rationale}`)
+  .join("\n\n")}
+`;
+
+  const contentBoundaryContent = `# Content Boundaries
+
+## Boundary Version
+${contentBoundaryProfile.boundaryVersion}
+
+## Hard Stops
+${contentBoundaryProfile.boundaries.hardStops.map((item) => `- ${item}`).join("\n")}
+
+## Review Required
+${contentBoundaryProfile.boundaries.reviewRequired.map((item) => `- ${item}`).join("\n")}
+
+## Preferred Guardrails
+${contentBoundaryProfile.boundaries.preferredGuardrails.map((item) => `- ${item}`).join("\n")}
+
+## Disallowed Claims
+${contentBoundaryProfile.boundaries.disallowedClaims.map((item) => `- ${item}`).join("\n")}
+
+## Injection Targets
+${contentBoundaryProfile.injectionTargets.map((item) => `- ${item.target}: ${item.purpose}`).join("\n")}
+
+## Mapping Notes
+${contentBoundaryProfile.mappingNotes
   .map((item) => `### ${item.targetField}\n- Derived From: ${item.derivedFrom.join(", ")}\n- Rationale: ${item.rationale}`)
   .join("\n\n")}
 `;
@@ -1314,6 +1478,16 @@ Instructions:
       content: `${JSON.stringify(contentOpsProfile, null, 2)}\n`,
     },
     {
+      path: "AI-OS/contentops/boundaries.md",
+      purpose: "给 ContentOps 读取的结构化内容边界与审核约束。",
+      content: contentBoundaryContent,
+    },
+    {
+      path: "AI-OS/contentops/boundaries.json",
+      purpose: "给 ContentOps 或其他下游系统直接消费的结构化内容边界数据。",
+      content: `${JSON.stringify(contentBoundaryProfile, null, 2)}\n`,
+    },
+    {
       path: "AI-OS/rules.md",
       purpose: "记录统一规则、权限等级、验证要求和禁止事项。",
       content: rulesContent,
@@ -1449,6 +1623,7 @@ Instructions:
     workspaceName,
     northStar: `让 AI 按统一规则稳定协作，围绕“${input.goal || "高质量完成关键任务"}”持续复利。`,
     contentOpsProfile,
+    contentBoundaryProfile,
     operatingRules,
     clientProfiles,
     starterFiles,
