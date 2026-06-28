@@ -216,6 +216,7 @@
 
 1. John 给出 `passed` 或要求补充
 2. 若 `passed`：
+   - 按 [joh-193-closeout-playbook.md](/Users/john/Desktop/AI/Solutions/ai-collab-foundation/docs/linear/joh-193-closeout-playbook.md) 执行收口
    - 将 `JOH-193` 更新为 `Done`
    - 将 `M4` 统一收口
    - 再决定是否进入 `M5`

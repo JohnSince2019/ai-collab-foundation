@@ -126,4 +126,5 @@ Linear 项目：`AI Collab Foundation`
 2. 在收到 `passed` 前，保持 `JOH-193` 为 `In Progress`
 3. John 最终只需确认 `draft-context`、`mother-draft-prompt`、`mother-draft-sample` 三项是否达到业务联动预期
 4. 若接受“联动链路已形成且干跑结果方向正确”的验收口径，则 `JOH-193` 已具备判定 `passed` 的证据条件
-5. `JOH-193` 验收完成后，M4 全部 issue 才可统一收口并等待是否进入 M5
+5. 若收到 `passed`，按 [joh-193-closeout-playbook.md](/Users/john/Desktop/AI/Solutions/ai-collab-foundation/docs/linear/joh-193-closeout-playbook.md) 执行收口
+6. `JOH-193` 验收完成后，M4 全部 issue 才可统一收口并等待是否进入 M5
